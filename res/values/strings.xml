@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">愛麗絲夢遊仙境 – 地底冒險</string>
+    <string name="content_description"></string>
+    <string name="introduction">遊戲介紹</string>
+    <string name="session1_title">遺失懷錶的白兔先生</string>
+    <string name="session2_title">帽子先生的名片</string>
+    <string name="session3_title">下午茶中的彩色蛋糕</string>
+    <string name="session4_title">奇怪的地圖</string>
+    <string name="home_title1">愛麗絲夢遊仙境</string>
+    <string name="home_title2">地底冒險(上)</string>
+    <string name="start">Start</string>
+    <string name="story_content">愛麗絲是一位想像力極豐富的女孩子，她相信若是有一個屬於她的世界，在那個世界中，各種動物與植物都可以像人類一般說話。一天，愛麗絲與姐姐在家園休息看書的時候，在附近遇見一隻匆忙的白兔子，她緊跟著過去不小心掉進未知的地洞世界，在那裡愛麗絲遇見很多奇特的生物。最後，愛麗絲闖進女王Queen的庭院，後來被女王的黑桃兵團追逐，愛麗絲不停地逃跑想逃離地洞，這整個歷程真是超脫常人的冒險經歷。</string>
+
+</resources>
