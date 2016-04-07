@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:text="@string/home_title1"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/white" />
+        android:textColor="@color/Focus_Blue" />
 
     <TextView
         android:id="@+id/textViewStoryTitle2"
@@ -21,19 +21,21 @@
         android:layout_height="wrap_content"
         android:text="@string/home_title2"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/white" />
+        android:textColor="@color/Focus_Blue" />
 
     <ScrollView
         android:id="@+id/scrollViewStoryContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
-        android:layout_weight="1" >
+        android:layout_weight="1"
+        android:background="@drawable/style_content" >
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical" >
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp" >
 
             <TextView
                 android:id="@+id/textViewStoryContent"
@@ -50,8 +52,9 @@
         android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:layout_marginTop="10dp"
+        android:background="@drawable/style_button"
         android:drawableStart="@drawable/ic_launcher"
-        android:text="@string/start"
+        android:text="@string/go"
         android:textColor="@color/Orange_Deep"
         android:textStyle="bold" />
 

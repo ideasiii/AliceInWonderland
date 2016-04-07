@@ -5,30 +5,38 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class MainActivity extends Activity
 {
 
-	private final int			LAYOUT_WELCOME	= 0;
-	private final int			LAYOUT_HOME		= 1;
-	private final int			LAYOUT_STORY	= 2;
-	private final int			LAYOUT_MAIN		= 3;
+	private final int			LAYOUT_WELCOME					= 0;
+	private final int			LAYOUT_HOME						= 1;
+	private final int			LAYOUT_STORY					= 2;
+	private final int			LAYOUT_MAIN						= 3;
 
-	private final int			MSG_SHOW_MAIN	= 10;
-	private final int			MSG_SHOW_HOME	= 20;
+	private final int			MSG_SHOW_MAIN					= 10;
+	private final int			MSG_SHOW_HOME					= 20;
+	private final int			MSG_SHOW_CONTENT_SESSION1_END	= 30;
 
-	private ViewPagerHandler	pageHandler		= null;
-	private FlipperHandler		flipperHandler	= null;
-	private View				viewSession1	= null;
+	private ViewPagerHandler	pageHandler						= null;
+	private FlipperHandler		flipperHandler					= null;
+	private View				viewSession1					= null;
+	private View				viewSession2					= null;
+	private View				viewSession3					= null;
+	private View				viewSession4					= null;
 	private ImageView			imgInitLogo;
-	private int[]				imgRes			= { R.drawable.init_logo, R.drawable.undobox };
+	private int[]				imgRes							= { R.drawable.init_logo, R.drawable.undobox };
+	private View				viewKeyInput					= null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -53,6 +61,7 @@ public class MainActivity extends Activity
 			break;
 		case LAYOUT_STORY:
 			setContentView(R.layout.intro);
+			initStoryGoBtn();
 			break;
 		case LAYOUT_MAIN:
 			setContentView(R.layout.activity_main);
@@ -74,6 +83,18 @@ public class MainActivity extends Activity
 		});
 	}
 
+	private void initStoryGoBtn()
+	{
+		this.findViewById(R.id.buttonStoryStart).setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				showLayout(LAYOUT_MAIN);
+			}
+		});
+	}
+
 	private void logoShow()
 	{
 		imgInitLogo = (ImageView) findViewById(R.id.imageViewInitLogo);
@@ -85,22 +106,15 @@ public class MainActivity extends Activity
 		flipperHandler = new FlipperHandler(this, selfHandler);
 		if (flipperHandler.init())
 		{
-
+			viewKeyInput = flipperHandler.getView(FlipperHandler.VIEW_ID_KEY_INPUT);
 		}
 
 		pageHandler = new ViewPagerHandler(this, selfHandler);
 		if (pageHandler.init())
 		{
-			pageHandler.showPage(1);
+			pageHandler.showPage(ViewPagerHandler.PAGE_SESSION1);
 			viewSession1 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION1);
-			viewSession1.findViewById(R.id.imageViewBook).setOnClickListener(new OnClickListener()
-			{
-				@Override
-				public void onClick(View v)
-				{
-					flipperHandler.showView(FlipperHandler.VIEW_ID_STORY);
-				}
-			});
+			fadeInAndShowContent(viewSession1.findViewById(R.id.scrollViewSession1Content));
 		}
 
 	}
@@ -113,6 +127,85 @@ public class MainActivity extends Activity
 	public void setSelfHandler(Handler selfHandler)
 	{
 		this.selfHandler = selfHandler;
+	}
+
+	private void initSession1()
+	{
+		viewSession1.findViewById(R.id.linearLayoutSession1Main).setBackgroundResource(R.color.Black_Gray_Deep);
+		viewSession1.findViewById(R.id.buttonSession1Key).setVisibility(View.VISIBLE);
+		viewSession1.findViewById(R.id.buttonSession1Key).setOnClickListener(new OnClickListener()
+		{
+
+			@Override
+			public void onClick(View v)
+			{
+				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
+				vTitle.setText(MainActivity.this.getString(R.string.session1_title1));
+				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
+				vTitle.setText(MainActivity.this.getString(R.string.session1_title2));
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
+				{
+					@Override
+					public void onClick(View v)
+					{
+						String strKey = "";
+						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
+						strKey = edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
+						strKey += edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
+						strKey += edKey.getText().toString();
+						Logs.showTrace("Input Key:" + strKey);
+						if (null == strKey || 0 >= strKey.length())
+						{
+							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+									.setOnClickListener(new OnClickListener()
+									{
+										@Override
+										public void onClick(View v)
+										{
+											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+										}
+									});
+						}
+						else
+						{
+							int nKey = Integer.valueOf(strKey);
+							if (123 == nKey)
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.close();
+												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION2);
+											}
+										});
+							}
+							else
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+											}
+										});
+							}
+						}
+
+					}
+				});
+				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+			}
+		});
 	}
 
 	private Handler selfHandler = new Handler()
@@ -128,6 +221,9 @@ public class MainActivity extends Activity
 			case MSG_SHOW_MAIN:
 				showLayout(LAYOUT_MAIN);
 				break;
+			case MSG_SHOW_CONTENT_SESSION1_END:
+				initSession1();
+				break;
 			}
 		}
 
@@ -137,7 +233,7 @@ public class MainActivity extends Activity
 	{
 		Animation fadeOut = new AlphaAnimation(1, 0);
 		fadeOut.setInterpolator(new AccelerateInterpolator());
-		fadeOut.setDuration(2000);
+		fadeOut.setDuration(1500);
 
 		fadeOut.setAnimationListener(new AnimationListener()
 		{
@@ -163,7 +259,7 @@ public class MainActivity extends Activity
 	{
 		Animation fadeIn = new AlphaAnimation(0, 1);
 		fadeIn.setInterpolator(new AccelerateInterpolator());
-		fadeIn.setDuration(2000);
+		fadeIn.setDuration(1000);
 
 		fadeIn.setAnimationListener(new AnimationListener()
 		{
@@ -183,4 +279,48 @@ public class MainActivity extends Activity
 
 		img.startAnimation(fadeIn);
 	}
+
+	private void fadeInAndShowContent(final View view)
+	{
+		Animation fadeIn = new AlphaAnimation(0, 1);
+		fadeIn.setInterpolator(new AccelerateInterpolator());
+		fadeIn.setDuration(3000);
+
+		fadeIn.setAnimationListener(new AnimationListener()
+		{
+			public void onAnimationEnd(Animation animation)
+			{
+				selfHandler.sendEmptyMessageDelayed(MSG_SHOW_CONTENT_SESSION1_END, 1000);
+			}
+
+			public void onAnimationRepeat(Animation animation)
+			{
+			}
+
+			public void onAnimationStart(Animation animation)
+			{
+			}
+		});
+
+		view.startAnimation(fadeIn);
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)
+	{
+		if (KeyEvent.KEYCODE_BACK == keyCode)
+		{
+			if (null != flipperHandler)
+			{
+				if (-1 != flipperHandler.getShowViewId())
+				{
+					flipperHandler.close();
+					return true;
+				}
+			}
+
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
 }

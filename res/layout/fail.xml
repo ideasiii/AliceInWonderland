@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/fail"
+    android:gravity="bottom|center_horizontal"
+    android:orientation="vertical"
+    android:padding="50dp" >
+
+    <TextView
+        android:id="@+id/textViewFailTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:background="@drawable/style_edit_text"
+        android:padding="4dp"
+        android:text="@string/try_again"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/holo_red_dark" />
+
+    <Button
+        android:id="@+id/buttonFail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/style_button"
+        android:text="@string/input_again"
+        android:textColor="@color/Orange_Deep" />
+
+</LinearLayout>

@@ -39,6 +39,7 @@
         android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:layout_marginTop="10dp"
+        android:background="@drawable/style_button"
         android:drawableStart="@drawable/ic_launcher"
         android:text="@string/start"
         android:textColor="@color/Orange_Deep"

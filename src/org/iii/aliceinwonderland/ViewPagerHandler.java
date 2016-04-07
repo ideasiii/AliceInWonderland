@@ -51,13 +51,13 @@ public class ViewPagerHandler extends BaseHandler
 		PAGE_INTRO = pagerAdapter.addPage(Inflater.inflate(R.layout.intro, null),
 				theActivity.getString(R.string.introduction));
 		PAGE_SESSION1 = pagerAdapter.addPage(Inflater.inflate(R.layout.session1, null),
-				theActivity.getString(R.string.session1_title));
+				theActivity.getString(R.string.session1_title2));
 		PAGE_SESSION2 = pagerAdapter.addPage(Inflater.inflate(R.layout.session2, null),
-				theActivity.getString(R.string.session2_title));
+				theActivity.getString(R.string.session2_title2));
 		PAGE_SESSION3 = pagerAdapter.addPage(Inflater.inflate(R.layout.session3, null),
-				theActivity.getString(R.string.session3_title));
+				theActivity.getString(R.string.session3_title2));
 		PAGE_SESSION4 = pagerAdapter.addPage(Inflater.inflate(R.layout.session4, null),
-				theActivity.getString(R.string.session4_title));
+				theActivity.getString(R.string.session4_title2));
 
 		viewPager.setAdapter(pagerAdapter);
 		return true;

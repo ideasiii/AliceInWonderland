@@ -65,7 +65,7 @@ public class FlipperView extends RelativeLayout
 		this.addView(flipper);
 		this.bringToFront();
 
-		setClickClose(true);
+		setClickClose(false);
 	}
 
 	public void setClickClose(final boolean bClose)

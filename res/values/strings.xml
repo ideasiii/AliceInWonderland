@@ -4,13 +4,25 @@
     <string name="app_name">愛麗絲夢遊仙境 – 地底冒險</string>
     <string name="content_description"></string>
     <string name="introduction">遊戲介紹</string>
-    <string name="session1_title">遺失懷錶的白兔先生</string>
-    <string name="session2_title">帽子先生的名片</string>
-    <string name="session3_title">下午茶中的彩色蛋糕</string>
-    <string name="session4_title">奇怪的地圖</string>
     <string name="home_title1">愛麗絲夢遊仙境</string>
     <string name="home_title2">地底冒險(上)</string>
     <string name="start">Start</string>
+    <string name="go">Go</string>
+    <string name="success">恭喜成功闖關!!</string>
+    <string name="next">進入下一關</string>
+    <string name="try_again">Sorry! 再試試看!</string>
+    <string name="input_again">再輸入一次</string>
+    <string name="session1_title1">關卡一：</string>
+    <string name="session1_title2">遺失懷錶的白兔先生</string>
+    <string name="session2_title1">關卡二：</string>
+    <string name="session2_title2">帽子先生的名片</string>
+    <string name="session3_title1">關卡三：</string>
+    <string name="session3_title2">下午茶中的彩色蛋糕</string>
+    <string name="session4_title1">關卡四：</string>
+    <string name="session4_title2">奇怪的地圖</string>
+    <string name="key">Key</string>
     <string name="story_content">愛麗絲是一位想像力極豐富的女孩子，她相信若是有一個屬於她的世界，在那個世界中，各種動物與植物都可以像人類一般說話。一天，愛麗絲與姐姐在家園休息看書的時候，在附近遇見一隻匆忙的白兔子，她緊跟著過去不小心掉進未知的地洞世界，在那裡愛麗絲遇見很多奇特的生物。最後，愛麗絲闖進女王Queen的庭院，後來被女王的黑桃兵團追逐，愛麗絲不停地逃跑想逃離地洞，這整個歷程真是超脫常人的冒險經歷。</string>
+    <string name="session1_content">這天，悶悶不樂的愛麗絲跟姊姊同坐於河畔。忽見一隻古怪的白兔走過，牠穿戴打扮非常特別，自言自語、行色匆匆，在走的過程當中還不小心把口袋內的三個懷錶掉在一棵樹洞旁，白兔也霎那間跑進了樹洞。好心的愛麗絲趕緊追了過去，想把懷錶撿起來還給白兔先生，卻發現樹洞旁原來還有更多個懷錶，她只好憑著剛剛的記憶把三種不同顏色、不同厚度的懷錶給找了出來。找到之後愛麗絲也跳進了樹洞，這個洞簡直是個深淵啊！過了很久，愛麗絲終於著地。</string>
+    <string name="session2_content">她驚覺自己身處奇怪的餐廳門外，而這個入口有好多隻動物正在排隊用膳，愛麗絲猜想白兔先生一定也排隊進入餐廳了，當愛麗絲也想排隊進去的時候，卻被門外的一隻名叫阿河的河馬給擋了下來，原來這次的下午茶饗宴是要有餐廳主人帽子先生的名片才可以入餐的。河馬阿河也不想太為難愛麗絲，給了他三張卡片，並告訴愛麗絲如果能從這三張卡片猜中帽子先生的本名，就願意將帽子先生的名片給於愛麗絲，這名片可以讓她成為此茶會的座上嘉賓。</string>
 
 </resources>

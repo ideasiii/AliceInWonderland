@@ -1,30 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearLayoutSession1Main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/session1"
-    android:orientation="vertical" >
+    android:background="@drawable/rabbit"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="20dp" >
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/textViewSession1Title1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/session1_title1"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:id="@+id/textViewSession1Title2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/session1_title2"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/white" />
+
+    <ScrollView
+        android:id="@+id/scrollViewSession1Content"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:gravity="right|center_vertical"
-        android:orientation="horizontal" >
+        android:layout_height="0dp"
+        android:layout_marginTop="20dp"
+        android:layout_weight="1"
+        android:background="@drawable/style_content" >
 
-        <ImageView
-            android:id="@+id/imageViewBook"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/content_description"
-            android:src="@drawable/book" />
+            android:orientation="vertical"
+            android:padding="10dp" >
 
-        <ImageView
-            android:id="@+id/imageViewKey"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/content_description"
-            android:src="@drawable/key" />
+            <TextView
+                android:id="@+id/textViewSession1Content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/session1_content"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+        </LinearLayout>
+    </ScrollView>
 
-    </LinearLayout>
+    <Button
+        android:id="@+id/buttonSession1Key"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/style_button"
+        android:drawableStart="@drawable/key"
+        android:text="@string/key"
+        android:textColor="@color/Orange_Deep"
+        android:textStyle="bold"
+        android:visibility="invisible" />
 
 </LinearLayout>
