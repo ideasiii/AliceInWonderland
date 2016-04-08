@@ -11,7 +11,7 @@
         android:id="@+id/textViewKeyInputTitle1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="60dp"
         android:text="@string/session1_title1"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@android:color/white" />
