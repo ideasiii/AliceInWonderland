@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/Black_Gray_Deep"
+    android:background="@drawable/home_bg"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="20dp" >
@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:text="@string/home_title1"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@color/Focus_Blue" />
+        android:textColor="@android:color/holo_red_dark" />
 
     <TextView
         android:id="@+id/textViewStoryTitle2"
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:text="@string/home_title2"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@color/Focus_Blue" />
+        android:textColor="@android:color/holo_red_dark" />
 
     <ScrollView
         android:id="@+id/scrollViewStoryContent"
@@ -29,7 +29,13 @@
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:layout_weight="1"
-        android:background="@drawable/style_content" >
+        android:background="@drawable/paper2"
+        android:paddingBottom="30dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="8dp"
+        android:paddingTop="35dp"
+        android:scrollIndicators="none"
+        android:scrollbars="none" >
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -27,6 +27,9 @@ public class MainActivity extends Activity
 	private final int			MSG_SHOW_MAIN					= 10;
 	private final int			MSG_SHOW_HOME					= 20;
 	private final int			MSG_SHOW_CONTENT_SESSION1_END	= 30;
+	private final int			MSG_SHOW_CONTENT_SESSION2_END	= 31;
+	private final int			MSG_SHOW_CONTENT_SESSION3_END	= 32;
+	private final int			MSG_SHOW_CONTENT_SESSION4_END	= 33;
 
 	private ViewPagerHandler	pageHandler						= null;
 	private FlipperHandler		flipperHandler					= null;
@@ -114,7 +117,8 @@ public class MainActivity extends Activity
 		{
 			pageHandler.showPage(ViewPagerHandler.PAGE_SESSION1);
 			viewSession1 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION1);
-			fadeInAndShowContent(viewSession1.findViewById(R.id.scrollViewSession1Content));
+			fadeInAndShowContent(viewSession1.findViewById(R.id.scrollViewSession1Content),
+					MSG_SHOW_CONTENT_SESSION1_END);
 		}
 
 	}
@@ -131,11 +135,10 @@ public class MainActivity extends Activity
 
 	private void initSession1()
 	{
-		viewSession1.findViewById(R.id.linearLayoutSession1Main).setBackgroundResource(R.color.Black_Gray_Deep);
+		// viewSession1.findViewById(R.id.linearLayoutSession1Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession1.findViewById(R.id.buttonSession1Key).setVisibility(View.VISIBLE);
 		viewSession1.findViewById(R.id.buttonSession1Key).setOnClickListener(new OnClickListener()
 		{
-
 			@Override
 			public void onClick(View v)
 			{
@@ -172,7 +175,7 @@ public class MainActivity extends Activity
 						else
 						{
 							int nKey = Integer.valueOf(strKey);
-							if (123 == nKey)
+							if (693 == nKey)
 							{
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
@@ -183,6 +186,10 @@ public class MainActivity extends Activity
 											{
 												flipperHandler.close();
 												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION2);
+												viewSession2 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION2);
+												fadeInAndShowContent(
+														viewSession2.findViewById(R.id.scrollViewSession2Content),
+														MSG_SHOW_CONTENT_SESSION2_END);
 											}
 										});
 							}
@@ -208,6 +215,263 @@ public class MainActivity extends Activity
 		});
 	}
 
+	private void initSession2()
+	{
+		// viewSession2.findViewById(R.id.linearLayoutSession2Main).setBackgroundResource(R.color.Black_Gray_Deep);
+		viewSession2.findViewById(R.id.buttonSession2Key).setVisibility(View.VISIBLE);
+		viewSession2.findViewById(R.id.buttonSession2Key).setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
+				vTitle.setText(MainActivity.this.getString(R.string.session2_title1));
+				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
+				vTitle.setText(MainActivity.this.getString(R.string.session2_title2));
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
+				{
+					@Override
+					public void onClick(View v)
+					{
+						String strKey = "";
+						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
+						strKey = edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
+						strKey += edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
+						strKey += edKey.getText().toString();
+						Logs.showTrace("Input Key:" + strKey);
+						if (null == strKey || 0 >= strKey.length())
+						{
+							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+									.setOnClickListener(new OnClickListener()
+									{
+										@Override
+										public void onClick(View v)
+										{
+											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+										}
+									});
+						}
+						else
+						{
+							int nKey = Integer.valueOf(strKey);
+							if (786 == nKey)
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.close();
+												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION3);
+												viewSession3 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION3);
+												fadeInAndShowContent(
+														viewSession3.findViewById(R.id.scrollViewSession3Content),
+														MSG_SHOW_CONTENT_SESSION3_END);
+											}
+										});
+							}
+							else
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+											}
+										});
+							}
+						}
+					}
+				});
+				clearKeyInput();
+				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+			}
+		});
+	}
+
+	private void initSession3()
+	{
+		// viewSession3.findViewById(R.id.linearLayoutSession3Main).setBackgroundResource(R.color.Black_Gray_Deep);
+		viewSession3.findViewById(R.id.buttonSession3Key).setVisibility(View.VISIBLE);
+		viewSession3.findViewById(R.id.buttonSession3Key).setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
+				vTitle.setText(MainActivity.this.getString(R.string.session3_title1));
+				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
+				vTitle.setText(MainActivity.this.getString(R.string.session3_title2));
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
+				{
+					@Override
+					public void onClick(View v)
+					{
+						String strKey = "";
+						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
+						strKey = edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
+						strKey += edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
+						strKey += edKey.getText().toString();
+						Logs.showTrace("Input Key:" + strKey);
+						if (null == strKey || 0 >= strKey.length())
+						{
+							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+									.setOnClickListener(new OnClickListener()
+									{
+										@Override
+										public void onClick(View v)
+										{
+											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+										}
+									});
+						}
+						else
+						{
+							int nKey = Integer.valueOf(strKey);
+							if (321 == nKey)
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.close();
+												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION4);
+												viewSession4 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION4);
+												fadeInAndShowContent(
+														viewSession4.findViewById(R.id.scrollViewSession4Content),
+														MSG_SHOW_CONTENT_SESSION4_END);
+											}
+										});
+							}
+							else
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+											}
+										});
+							}
+						}
+
+					}
+				});
+				clearKeyInput();
+				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+			}
+		});
+	}
+
+	private void initSession4()
+	{
+		// viewSession4.findViewById(R.id.linearLayoutSession4Main).setBackgroundResource(R.color.Black_Gray_Deep);
+		viewSession4.findViewById(R.id.buttonSession4Key).setVisibility(View.VISIBLE);
+		viewSession4.findViewById(R.id.buttonSession4Key).setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
+				vTitle.setText(MainActivity.this.getString(R.string.session4_title1));
+				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
+				vTitle.setText(MainActivity.this.getString(R.string.session4_title2));
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
+				{
+					@Override
+					public void onClick(View v)
+					{
+						String strKey = "";
+						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
+						strKey = edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
+						strKey += edKey.getText().toString();
+						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
+						strKey += edKey.getText().toString();
+						Logs.showTrace("Input Key:" + strKey);
+						if (null == strKey || 0 >= strKey.length())
+						{
+							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+									.setOnClickListener(new OnClickListener()
+									{
+										@Override
+										public void onClick(View v)
+										{
+											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+										}
+									});
+						}
+						else
+						{
+							int nKey = Integer.valueOf(strKey);
+							if (245 == nKey)
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.close();
+												/*
+												 * pageHandler.showPage(ViewPagerHandler.PAGE_SESSION4); viewSession4 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION4);
+												 * fadeInAndShowContent( viewSession4.findViewById(R.id.scrollViewSession4Content), MSG_SHOW_CONTENT_SESSION4_END);
+												 */
+											}
+										});
+							}
+							else
+							{
+								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
+								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
+										.setOnClickListener(new OnClickListener()
+										{
+											@Override
+											public void onClick(View v)
+											{
+												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+											}
+										});
+							}
+						}
+
+					}
+				});
+				clearKeyInput();
+				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
+			}
+		});
+	}
+
+	private void clearKeyInput()
+	{
+		EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
+		edKey.setText("");
+		edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
+		edKey.setText("");
+		edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
+		edKey.setText("");
+	}
+
 	private Handler selfHandler = new Handler()
 	{
 		@Override
@@ -223,6 +487,15 @@ public class MainActivity extends Activity
 				break;
 			case MSG_SHOW_CONTENT_SESSION1_END:
 				initSession1();
+				break;
+			case MSG_SHOW_CONTENT_SESSION2_END:
+				initSession2();
+				break;
+			case MSG_SHOW_CONTENT_SESSION3_END:
+				initSession3();
+				break;
+			case MSG_SHOW_CONTENT_SESSION4_END:
+				initSession4();
 				break;
 			}
 		}
@@ -280,7 +553,7 @@ public class MainActivity extends Activity
 		img.startAnimation(fadeIn);
 	}
 
-	private void fadeInAndShowContent(final View view)
+	private void fadeInAndShowContent(final View view, final int nCallbackId)
 	{
 		Animation fadeIn = new AlphaAnimation(0, 1);
 		fadeIn.setInterpolator(new AccelerateInterpolator());
@@ -290,7 +563,7 @@ public class MainActivity extends Activity
 		{
 			public void onAnimationEnd(Animation animation)
 			{
-				selfHandler.sendEmptyMessageDelayed(MSG_SHOW_CONTENT_SESSION1_END, 1000);
+				selfHandler.sendEmptyMessageDelayed(nCallbackId, 1000);
 			}
 
 			public void onAnimationRepeat(Animation animation)

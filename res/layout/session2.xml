@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearLayoutSession2Main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/session2_bg"
@@ -29,7 +30,12 @@
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:layout_weight="1"
-        android:background="@drawable/style_content" >
+        android:background="@drawable/paper2"
+        android:paddingBottom="30dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="8dp"
+        android:paddingTop="35dp"
+        android:scrollbars="none" >
 
         <LinearLayout
             android:layout_width="match_parent"
