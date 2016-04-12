@@ -1,5 +1,6 @@
 package org.iii.aliceinwonderland;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -113,14 +114,55 @@ public class MainActivity extends Activity {
 	}
 
 	private void sharePhotoToFacebook() {
-		
+		/*
+		 * Bitmap image = BitmapFactory.decodeResource(getResources(),
+		 * R.drawable.ic_launcher); SharePhoto photo = new
+		 * SharePhoto.Builder().setBitmap(image) .setCaption(
+		 * "Give me my codez or I will ... you know, do that thing you don't like!"
+		 * ).build();
+		 * 
+		 * SharePhotoContent content = new
+		 * SharePhotoContent.Builder().addPhoto(photo).build();
+		 * 
+		 * ShareApi.share(content, null);
+		 */
+
+		Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.ending_bg);
+
+		SharePhoto photo = new SharePhoto.Builder().setBitmap(image).build();
+		SharePhotoContent sharePhotoContent = new SharePhotoContent.Builder().addPhoto(photo).setRef("Testing picture post").build();
 
 		ShareLinkContent shareLinkContent = new ShareLinkContent.Builder().setContentTitle("Your Title")
 				.setContentDescription("Your Description")
 				.setImageUrl(Uri
 						.parse("https://lh3.googleusercontent.com/5oh994t2XLUThXYZQgeH3lv7Zv0cAHh8qJPuK82tqES6oFDASv4j43D0Hsps84_IhjM=w300"))
 				.build();
-		ShareDialog.show(MainActivity.this, shareLinkContent);
+		// ShareDialog.show(MainActivity.this, sharePhotoContent);
+
+		if (ShareDialog.canShow(SharePhotoContent.class)) {
+			// SharePhotoContent content = new
+			// SharePhotoContent.Builder().setPhotos(photos).build();
+			Logs.showTrace("go##################################");
+			ShareDialog shareDialog = new ShareDialog(MainActivity.this);
+			shareDialog.show(sharePhotoContent);
+		} else {
+			
+
+			SharePhoto sharePhoto = new SharePhoto.Builder().setBitmap(image).build(); // oR
+																						// SharePhoto
+																						// sharePhoto
+																						// =
+																						// new
+																						// SharePhoto.Builder().setImageUrl("path").build();
+			ArrayList<SharePhoto> photos = new ArrayList<SharePhoto>();
+
+			photos.add(sharePhoto);
+
+			//SharePhotoContent sharePhotoContent = new SharePhotoContent.Builder().setRef("Testing picture post").setPhotos(photos).build();
+
+			ShareApi.share(sharePhotoContent, null);
+			Logs.showTrace("go 222222222##################################");
+		}
 
 	}
 
