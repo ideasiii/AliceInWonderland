@@ -20,6 +20,7 @@ public class ViewPagerHandler extends BaseHandler
 	public static int			PAGE_SESSION2;
 	public static int			PAGE_SESSION3;
 	public static int			PAGE_SESSION4;
+	public static int			PAGE_ENDING;
 
 	public ViewPagerHandler(Activity activity, Handler handler)
 	{
@@ -58,7 +59,8 @@ public class ViewPagerHandler extends BaseHandler
 				theActivity.getString(R.string.session3_title2));
 		PAGE_SESSION4 = pagerAdapter.addPage(Inflater.inflate(R.layout.session4, null),
 				theActivity.getString(R.string.session4_title2));
-
+		PAGE_ENDING = pagerAdapter.addPage(Inflater.inflate(R.layout.ending, null),
+				theActivity.getString(R.string.ending_title));
 		viewPager.setAdapter(pagerAdapter);
 		return true;
 	}

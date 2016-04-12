@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/Black_Gray_Deep"
+    android:background="@drawable/success"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="20dp" >
@@ -11,9 +11,11 @@
         android:id="@+id/textViewHomeTitle1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:text="@string/home_title1"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/holo_orange_dark"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/textViewHomeTitle2"
@@ -21,7 +23,7 @@
         android:layout_height="wrap_content"
         android:text="@string/home_title2"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/holo_orange_dark" />
 
     <ImageView
         android:id="@+id/imageViewHomePic"
@@ -40,7 +42,9 @@
         android:layout_height="60dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/style_button"
-        android:drawableStart="@drawable/ic_launcher"
+        android:drawablePadding="5dp"
+        android:drawableStart="@drawable/btn_pic"
+        android:padding="10dp"
         android:text="@string/start"
         android:textColor="@color/Orange_Deep"
         android:textStyle="bold" />

@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
+    <issue id="ClickableViewAccessibility">
+        <ignore path="src/org/iii/aliceinwonderland/ViewPagerHandler.java" />
+    </issue>
     <issue id="HandlerLeak" severity="ignore" />
+    <issue id="InflateParams" severity="ignore" />
 </lint>

@@ -1,10 +1,16 @@
 package org.iii.aliceinwonderland;
 
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -12,6 +18,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -30,6 +37,7 @@ public class MainActivity extends Activity
 	private final int			MSG_SHOW_CONTENT_SESSION2_END	= 31;
 	private final int			MSG_SHOW_CONTENT_SESSION3_END	= 32;
 	private final int			MSG_SHOW_CONTENT_SESSION4_END	= 33;
+	private final int			MSG_SHOW_SHARE_DIALOG			= 34;
 
 	private ViewPagerHandler	pageHandler						= null;
 	private FlipperHandler		flipperHandler					= null;
@@ -40,6 +48,9 @@ public class MainActivity extends Activity
 	private ImageView			imgInitLogo;
 	private int[]				imgRes							= { R.drawable.init_logo, R.drawable.undobox };
 	private View				viewKeyInput					= null;
+	private EditText			edKey1							= null;
+	private EditText			edKey2							= null;
+	private EditText			edKey3							= null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -48,6 +59,9 @@ public class MainActivity extends Activity
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		this.getActionBar().hide();
 		showLayout(LAYOUT_WELCOME);
+
+		FacebookSdk.sdkInitialize(getApplicationContext());
+		AppEventsLogger.activateApp(this);
 	}
 
 	private void showLayout(final int nLayout)
@@ -110,6 +124,81 @@ public class MainActivity extends Activity
 		if (flipperHandler.init())
 		{
 			viewKeyInput = flipperHandler.getView(FlipperHandler.VIEW_ID_KEY_INPUT);
+			edKey1 = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
+			edKey2 = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
+			edKey3 = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
+			edKey1.addTextChangedListener(new TextWatcher()
+			{
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after)
+				{
+
+				}
+
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count)
+				{
+
+				}
+
+				@Override
+				public void afterTextChanged(Editable s)
+				{
+					if (null != s && 0 < s.toString().trim().length())
+						edKey2.requestFocus();
+				}
+			});
+
+			edKey2.addTextChangedListener(new TextWatcher()
+			{
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after)
+				{
+
+				}
+
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count)
+				{
+
+				}
+
+				@Override
+				public void afterTextChanged(Editable s)
+				{
+					if (null != s && 0 < s.toString().trim().length())
+						edKey3.requestFocus();
+				}
+			});
+
+			edKey3.addTextChangedListener(new TextWatcher()
+			{
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after)
+				{
+
+				}
+
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count)
+				{
+
+				}
+
+				@Override
+				public void afterTextChanged(Editable s)
+				{
+					if (null != s && 0 < s.toString().trim().length())
+					{
+						InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+						imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+					}
+				}
+			});
+
 		}
 
 		pageHandler = new ViewPagerHandler(this, selfHandler);
@@ -152,12 +241,8 @@ public class MainActivity extends Activity
 					public void onClick(View v)
 					{
 						String strKey = "";
-						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
-						strKey = edKey.getText().toString();
-						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
-						strKey += edKey.getText().toString();
-						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
-						strKey += edKey.getText().toString();
+						strKey = edKey1.getText().toString() + edKey2.getText().toString()
+								+ edKey3.getText().toString();
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
@@ -424,20 +509,7 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (245 == nKey)
 							{
-								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
-								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
-										.setOnClickListener(new OnClickListener()
-										{
-											@Override
-											public void onClick(View v)
-											{
-												flipperHandler.close();
-												/*
-												 * pageHandler.showPage(ViewPagerHandler.PAGE_SESSION4); viewSession4 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION4);
-												 * fadeInAndShowContent( viewSession4.findViewById(R.id.scrollViewSession4Content), MSG_SHOW_CONTENT_SESSION4_END);
-												 */
-											}
-										});
+								showEnding();
 							}
 							else
 							{
@@ -462,6 +534,31 @@ public class MainActivity extends Activity
 		});
 	}
 
+	private void showEnding()
+	{
+		pageHandler.getView(ViewPagerHandler.PAGE_ENDING).findViewById(R.id.imageViewEndingShare)
+				.setOnClickListener(new OnClickListener()
+				{
+
+					@Override
+					public void onClick(View v)
+					{
+						Intent sendIntent = new Intent();
+						sendIntent.setAction(Intent.ACTION_SEND);
+						sendIntent.putExtra(Intent.EXTRA_TEXT, "xxxxxxxxxx");
+						sendIntent.setType("text/plain");
+						sendIntent.setPackage("com.facebook.orca");
+						startActivity(sendIntent);
+
+					}
+				});
+
+		flipperHandler.close();
+		pageHandler.showPage(ViewPagerHandler.PAGE_ENDING);
+		selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE_DIALOG, 3000);
+
+	}
+
 	private void clearKeyInput()
 	{
 		EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
@@ -470,6 +567,19 @@ public class MainActivity extends Activity
 		edKey.setText("");
 		edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
 		edKey.setText("");
+	}
+
+	private void showShareDialog()
+	{
+		View view = pageHandler.getView(ViewPagerHandler.PAGE_ENDING);
+		if (null != view)
+		{
+			View vDialog = view.findViewById(R.id.textViewShareDialog);
+			if (null != vDialog)
+			{
+				vDialog.setVisibility(View.VISIBLE);
+			}
+		}
 	}
 
 	private Handler selfHandler = new Handler()
@@ -496,6 +606,9 @@ public class MainActivity extends Activity
 				break;
 			case MSG_SHOW_CONTENT_SESSION4_END:
 				initSession4();
+				break;
+			case MSG_SHOW_SHARE_DIALOG:
+				showShareDialog();
 				break;
 			}
 		}
@@ -557,13 +670,13 @@ public class MainActivity extends Activity
 	{
 		Animation fadeIn = new AlphaAnimation(0, 1);
 		fadeIn.setInterpolator(new AccelerateInterpolator());
-		fadeIn.setDuration(3000);
+		fadeIn.setDuration(1000);
 
 		fadeIn.setAnimationListener(new AnimationListener()
 		{
 			public void onAnimationEnd(Animation animation)
 			{
-				selfHandler.sendEmptyMessageDelayed(nCallbackId, 1000);
+				selfHandler.sendEmptyMessageDelayed(nCallbackId, 100);
 			}
 
 			public void onAnimationRepeat(Animation animation)
