@@ -1,11 +1,27 @@
 package org.iii.aliceinwonderland;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+import com.facebook.share.ShareApi;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareDialog;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -23,38 +39,39 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class MainActivity extends Activity
-{
+public class MainActivity extends Activity {
 
-	private final int			LAYOUT_WELCOME					= 0;
-	private final int			LAYOUT_HOME						= 1;
-	private final int			LAYOUT_STORY					= 2;
-	private final int			LAYOUT_MAIN						= 3;
+	private final int LAYOUT_WELCOME = 0;
+	private final int LAYOUT_HOME = 1;
+	private final int LAYOUT_STORY = 2;
+	private final int LAYOUT_MAIN = 3;
 
-	private final int			MSG_SHOW_MAIN					= 10;
-	private final int			MSG_SHOW_HOME					= 20;
-	private final int			MSG_SHOW_CONTENT_SESSION1_END	= 30;
-	private final int			MSG_SHOW_CONTENT_SESSION2_END	= 31;
-	private final int			MSG_SHOW_CONTENT_SESSION3_END	= 32;
-	private final int			MSG_SHOW_CONTENT_SESSION4_END	= 33;
-	private final int			MSG_SHOW_SHARE_DIALOG			= 34;
+	private final int MSG_SHOW_MAIN = 10;
+	private final int MSG_SHOW_HOME = 20;
+	private final int MSG_SHOW_CONTENT_SESSION1_END = 30;
+	private final int MSG_SHOW_CONTENT_SESSION2_END = 31;
+	private final int MSG_SHOW_CONTENT_SESSION3_END = 32;
+	private final int MSG_SHOW_CONTENT_SESSION4_END = 33;
+	private final int MSG_SHOW_SHARE_DIALOG = 34;
 
-	private ViewPagerHandler	pageHandler						= null;
-	private FlipperHandler		flipperHandler					= null;
-	private View				viewSession1					= null;
-	private View				viewSession2					= null;
-	private View				viewSession3					= null;
-	private View				viewSession4					= null;
-	private ImageView			imgInitLogo;
-	private int[]				imgRes							= { R.drawable.init_logo, R.drawable.undobox };
-	private View				viewKeyInput					= null;
-	private EditText			edKey1							= null;
-	private EditText			edKey2							= null;
-	private EditText			edKey3							= null;
+	private ViewPagerHandler pageHandler = null;
+	private FlipperHandler flipperHandler = null;
+	private View viewSession1 = null;
+	private View viewSession2 = null;
+	private View viewSession3 = null;
+	private View viewSession4 = null;
+	private ImageView imgInitLogo;
+	private int[] imgRes = { R.drawable.init_logo, R.drawable.undobox };
+	private View viewKeyInput = null;
+	private EditText edKey1 = null;
+	private EditText edKey2 = null;
+	private EditText edKey3 = null;
+
+	private CallbackManager callbackManager;
+	private LoginManager loginManager;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState)
-	{
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		this.getActionBar().hide();
@@ -62,12 +79,59 @@ public class MainActivity extends Activity
 
 		FacebookSdk.sdkInitialize(getApplicationContext());
 		AppEventsLogger.activateApp(this);
+		FacebookSdk.sdkInitialize(getApplicationContext());
+
+		callbackManager = CallbackManager.Factory.create();
+
+		List<String> permissionNeeds = Arrays.asList("publish_actions");
+
+		// this loginManager helps you eliminate adding a LoginButton to your UI
+		loginManager = LoginManager.getInstance();
+
+		loginManager.logInWithPublishPermissions(this, permissionNeeds);
+
+		loginManager.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+
+			@Override
+			public void onSuccess(LoginResult loginResult) {
+
+			}
+
+			@Override
+			public void onCancel() {
+				System.out.println("onCancel");
+			}
+
+			@Override
+			public void onError(FacebookException error) {
+				// TODO Auto-generated method stub
+
+			}
+
+		});
+
 	}
 
-	private void showLayout(final int nLayout)
-	{
-		switch(nLayout)
-		{
+	private void sharePhotoToFacebook() {
+		
+
+		ShareLinkContent shareLinkContent = new ShareLinkContent.Builder().setContentTitle("Your Title")
+				.setContentDescription("Your Description")
+				.setImageUrl(Uri
+						.parse("https://lh3.googleusercontent.com/5oh994t2XLUThXYZQgeH3lv7Zv0cAHh8qJPuK82tqES6oFDASv4j43D0Hsps84_IhjM=w300"))
+				.build();
+		ShareDialog.show(MainActivity.this, shareLinkContent);
+
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		callbackManager.onActivityResult(requestCode, resultCode, data);
+	}
+
+	private void showLayout(final int nLayout) {
+		switch (nLayout) {
 		case LAYOUT_WELCOME:
 			setContentView(R.layout.welcome);
 			logoShow();
@@ -87,112 +151,90 @@ public class MainActivity extends Activity
 		}
 	}
 
-	private void initHomeStartBtn()
-	{
-		this.findViewById(R.id.buttonHomeStart).setOnClickListener(new OnClickListener()
-		{
+	private void initHomeStartBtn() {
+		this.findViewById(R.id.buttonHomeStart).setOnClickListener(new OnClickListener() {
 
 			@Override
-			public void onClick(View v)
-			{
+			public void onClick(View v) {
 				showLayout(LAYOUT_STORY);
 			}
 		});
 	}
 
-	private void initStoryGoBtn()
-	{
-		this.findViewById(R.id.buttonStoryStart).setOnClickListener(new OnClickListener()
-		{
+	private void initStoryGoBtn() {
+		this.findViewById(R.id.buttonStoryStart).setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
+			public void onClick(View v) {
 				showLayout(LAYOUT_MAIN);
 			}
 		});
 	}
 
-	private void logoShow()
-	{
+	private void logoShow() {
 		imgInitLogo = (ImageView) findViewById(R.id.imageViewInitLogo);
 		fadeOutAndHideImage(imgInitLogo);
 	}
 
-	private void initMainHandler()
-	{
+	private void initMainHandler() {
 		flipperHandler = new FlipperHandler(this, selfHandler);
-		if (flipperHandler.init())
-		{
+		if (flipperHandler.init()) {
 			viewKeyInput = flipperHandler.getView(FlipperHandler.VIEW_ID_KEY_INPUT);
 			edKey1 = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
 			edKey2 = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
 			edKey3 = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
-			edKey1.addTextChangedListener(new TextWatcher()
-			{
+			edKey1.addTextChangedListener(new TextWatcher() {
 
 				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after)
-				{
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
 				}
 
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count)
-				{
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
 
 				}
 
 				@Override
-				public void afterTextChanged(Editable s)
-				{
+				public void afterTextChanged(Editable s) {
 					if (null != s && 0 < s.toString().trim().length())
 						edKey2.requestFocus();
 				}
 			});
 
-			edKey2.addTextChangedListener(new TextWatcher()
-			{
+			edKey2.addTextChangedListener(new TextWatcher() {
 
 				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after)
-				{
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
 				}
 
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count)
-				{
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
 
 				}
 
 				@Override
-				public void afterTextChanged(Editable s)
-				{
+				public void afterTextChanged(Editable s) {
 					if (null != s && 0 < s.toString().trim().length())
 						edKey3.requestFocus();
 				}
 			});
 
-			edKey3.addTextChangedListener(new TextWatcher()
-			{
+			edKey3.addTextChangedListener(new TextWatcher() {
 
 				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after)
-				{
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
 				}
 
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count)
-				{
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
 
 				}
 
 				@Override
-				public void afterTextChanged(Editable s)
-				{
-					if (null != s && 0 < s.toString().trim().length())
-					{
+				public void afterTextChanged(Editable s) {
+					if (null != s && 0 < s.toString().trim().length()) {
 						InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
 						imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
 					}
@@ -202,8 +244,7 @@ public class MainActivity extends Activity
 		}
 
 		pageHandler = new ViewPagerHandler(this, selfHandler);
-		if (pageHandler.init())
-		{
+		if (pageHandler.init()) {
 			pageHandler.showPage(ViewPagerHandler.PAGE_SESSION1);
 			viewSession1 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION1);
 			fadeInAndShowContent(viewSession1.findViewById(R.id.scrollViewSession1Content),
@@ -212,63 +253,48 @@ public class MainActivity extends Activity
 
 	}
 
-	public Handler getSelfHandler()
-	{
+	public Handler getSelfHandler() {
 		return selfHandler;
 	}
 
-	public void setSelfHandler(Handler selfHandler)
-	{
+	public void setSelfHandler(Handler selfHandler) {
 		this.selfHandler = selfHandler;
 	}
 
-	private void initSession1()
-	{
+	private void initSession1() {
 		// viewSession1.findViewById(R.id.linearLayoutSession1Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession1.findViewById(R.id.buttonSession1Key).setVisibility(View.VISIBLE);
-		viewSession1.findViewById(R.id.buttonSession1Key).setOnClickListener(new OnClickListener()
-		{
+		viewSession1.findViewById(R.id.buttonSession1Key).setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
+			public void onClick(View v) {
 				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
 				vTitle.setText(MainActivity.this.getString(R.string.session1_title1));
 				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
 				vTitle.setText(MainActivity.this.getString(R.string.session1_title2));
-				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
-				{
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener() {
 					@Override
-					public void onClick(View v)
-					{
+					public void onClick(View v) {
 						String strKey = "";
 						strKey = edKey1.getText().toString() + edKey2.getText().toString()
 								+ edKey3.getText().toString();
 						Logs.showTrace("Input Key:" + strKey);
-						if (null == strKey || 0 >= strKey.length())
-						{
+						if (null == strKey || 0 >= strKey.length()) {
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-									.setOnClickListener(new OnClickListener()
-									{
+									.setOnClickListener(new OnClickListener() {
 										@Override
-										public void onClick(View v)
-										{
+										public void onClick(View v) {
 											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 										}
 									});
-						}
-						else
-						{
+						} else {
 							int nKey = Integer.valueOf(strKey);
-							if (693 == nKey)
-							{
+							if (693 == nKey) {
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
-										.setOnClickListener(new OnClickListener()
-										{
+										.setOnClickListener(new OnClickListener() {
 											@Override
-											public void onClick(View v)
-											{
+											public void onClick(View v) {
 												flipperHandler.close();
 												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION2);
 												viewSession2 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION2);
@@ -277,16 +303,12 @@ public class MainActivity extends Activity
 														MSG_SHOW_CONTENT_SESSION2_END);
 											}
 										});
-							}
-							else
-							{
+							} else {
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-										.setOnClickListener(new OnClickListener()
-										{
+										.setOnClickListener(new OnClickListener() {
 											@Override
-											public void onClick(View v)
-											{
+											public void onClick(View v) {
 												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 											}
 										});
@@ -294,30 +316,26 @@ public class MainActivity extends Activity
 						}
 
 					}
+
 				});
 				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 			}
 		});
 	}
 
-	private void initSession2()
-	{
+	private void initSession2() {
 		// viewSession2.findViewById(R.id.linearLayoutSession2Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession2.findViewById(R.id.buttonSession2Key).setVisibility(View.VISIBLE);
-		viewSession2.findViewById(R.id.buttonSession2Key).setOnClickListener(new OnClickListener()
-		{
+		viewSession2.findViewById(R.id.buttonSession2Key).setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
+			public void onClick(View v) {
 				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
 				vTitle.setText(MainActivity.this.getString(R.string.session2_title1));
 				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
 				vTitle.setText(MainActivity.this.getString(R.string.session2_title2));
-				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
-				{
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener() {
 					@Override
-					public void onClick(View v)
-					{
+					public void onClick(View v) {
 						String strKey = "";
 						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
 						strKey = edKey.getText().toString();
@@ -326,31 +344,23 @@ public class MainActivity extends Activity
 						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
 						strKey += edKey.getText().toString();
 						Logs.showTrace("Input Key:" + strKey);
-						if (null == strKey || 0 >= strKey.length())
-						{
+						if (null == strKey || 0 >= strKey.length()) {
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-									.setOnClickListener(new OnClickListener()
-									{
+									.setOnClickListener(new OnClickListener() {
 										@Override
-										public void onClick(View v)
-										{
+										public void onClick(View v) {
 											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 										}
 									});
-						}
-						else
-						{
+						} else {
 							int nKey = Integer.valueOf(strKey);
-							if (786 == nKey)
-							{
+							if (786 == nKey) {
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
-										.setOnClickListener(new OnClickListener()
-										{
+										.setOnClickListener(new OnClickListener() {
 											@Override
-											public void onClick(View v)
-											{
+											public void onClick(View v) {
 												flipperHandler.close();
 												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION3);
 												viewSession3 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION3);
@@ -359,22 +369,19 @@ public class MainActivity extends Activity
 														MSG_SHOW_CONTENT_SESSION3_END);
 											}
 										});
-							}
-							else
-							{
+							} else {
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-										.setOnClickListener(new OnClickListener()
-										{
+										.setOnClickListener(new OnClickListener() {
 											@Override
-											public void onClick(View v)
-											{
+											public void onClick(View v) {
 												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 											}
 										});
 							}
 						}
 					}
+
 				});
 				clearKeyInput();
 				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
@@ -382,24 +389,19 @@ public class MainActivity extends Activity
 		});
 	}
 
-	private void initSession3()
-	{
+	private void initSession3() {
 		// viewSession3.findViewById(R.id.linearLayoutSession3Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession3.findViewById(R.id.buttonSession3Key).setVisibility(View.VISIBLE);
-		viewSession3.findViewById(R.id.buttonSession3Key).setOnClickListener(new OnClickListener()
-		{
+		viewSession3.findViewById(R.id.buttonSession3Key).setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
+			public void onClick(View v) {
 				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
 				vTitle.setText(MainActivity.this.getString(R.string.session3_title1));
 				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
 				vTitle.setText(MainActivity.this.getString(R.string.session3_title2));
-				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
-				{
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener() {
 					@Override
-					public void onClick(View v)
-					{
+					public void onClick(View v) {
 						String strKey = "";
 						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
 						strKey = edKey.getText().toString();
@@ -408,31 +410,23 @@ public class MainActivity extends Activity
 						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
 						strKey += edKey.getText().toString();
 						Logs.showTrace("Input Key:" + strKey);
-						if (null == strKey || 0 >= strKey.length())
-						{
+						if (null == strKey || 0 >= strKey.length()) {
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-									.setOnClickListener(new OnClickListener()
-									{
+									.setOnClickListener(new OnClickListener() {
 										@Override
-										public void onClick(View v)
-										{
+										public void onClick(View v) {
 											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 										}
 									});
-						}
-						else
-						{
+						} else {
 							int nKey = Integer.valueOf(strKey);
-							if (321 == nKey)
-							{
+							if (321 == nKey) {
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
-										.setOnClickListener(new OnClickListener()
-										{
+										.setOnClickListener(new OnClickListener() {
 											@Override
-											public void onClick(View v)
-											{
+											public void onClick(View v) {
 												flipperHandler.close();
 												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION4);
 												viewSession4 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION4);
@@ -441,16 +435,12 @@ public class MainActivity extends Activity
 														MSG_SHOW_CONTENT_SESSION4_END);
 											}
 										});
-							}
-							else
-							{
+							} else {
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-										.setOnClickListener(new OnClickListener()
-										{
+										.setOnClickListener(new OnClickListener() {
 											@Override
-											public void onClick(View v)
-											{
+											public void onClick(View v) {
 												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 											}
 										});
@@ -458,6 +448,7 @@ public class MainActivity extends Activity
 						}
 
 					}
+
 				});
 				clearKeyInput();
 				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
@@ -465,24 +456,19 @@ public class MainActivity extends Activity
 		});
 	}
 
-	private void initSession4()
-	{
+	private void initSession4() {
 		// viewSession4.findViewById(R.id.linearLayoutSession4Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession4.findViewById(R.id.buttonSession4Key).setVisibility(View.VISIBLE);
-		viewSession4.findViewById(R.id.buttonSession4Key).setOnClickListener(new OnClickListener()
-		{
+		viewSession4.findViewById(R.id.buttonSession4Key).setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
+			public void onClick(View v) {
 				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
 				vTitle.setText(MainActivity.this.getString(R.string.session4_title1));
 				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
 				vTitle.setText(MainActivity.this.getString(R.string.session4_title2));
-				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
-				{
+				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener() {
 					@Override
-					public void onClick(View v)
-					{
+					public void onClick(View v) {
 						String strKey = "";
 						EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
 						strKey = edKey.getText().toString();
@@ -491,35 +477,25 @@ public class MainActivity extends Activity
 						edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey3);
 						strKey += edKey.getText().toString();
 						Logs.showTrace("Input Key:" + strKey);
-						if (null == strKey || 0 >= strKey.length())
-						{
+						if (null == strKey || 0 >= strKey.length()) {
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-									.setOnClickListener(new OnClickListener()
-									{
+									.setOnClickListener(new OnClickListener() {
 										@Override
-										public void onClick(View v)
-										{
+										public void onClick(View v) {
 											flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 										}
 									});
-						}
-						else
-						{
+						} else {
 							int nKey = Integer.valueOf(strKey);
-							if (245 == nKey)
-							{
+							if (245 == nKey) {
 								showEnding();
-							}
-							else
-							{
+							} else {
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
-										.setOnClickListener(new OnClickListener()
-										{
+										.setOnClickListener(new OnClickListener() {
 											@Override
-											public void onClick(View v)
-											{
+											public void onClick(View v) {
 												flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
 											}
 										});
@@ -527,6 +503,7 @@ public class MainActivity extends Activity
 						}
 
 					}
+
 				});
 				clearKeyInput();
 				flipperHandler.showView(FlipperHandler.VIEW_ID_KEY_INPUT);
@@ -534,22 +511,14 @@ public class MainActivity extends Activity
 		});
 	}
 
-	private void showEnding()
-	{
+	private void showEnding() {
 		pageHandler.getView(ViewPagerHandler.PAGE_ENDING).findViewById(R.id.imageViewEndingShare)
-				.setOnClickListener(new OnClickListener()
-				{
+				.setOnClickListener(new OnClickListener() {
 
 					@Override
-					public void onClick(View v)
-					{
-						Intent sendIntent = new Intent();
-						sendIntent.setAction(Intent.ACTION_SEND);
-						sendIntent.putExtra(Intent.EXTRA_TEXT, "xxxxxxxxxx");
-						sendIntent.setType("text/plain");
-						sendIntent.setPackage("com.facebook.orca");
-						startActivity(sendIntent);
-
+					public void onClick(View v) {
+						// shareTo("facebook", "hi", "分享");
+						sharePhotoToFacebook();
 					}
 				});
 
@@ -559,8 +528,17 @@ public class MainActivity extends Activity
 
 	}
 
-	private void clearKeyInput()
-	{
+	private void shareTo(String subject, String body, String chooserTitle) {
+
+		Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+		sharingIntent.setType("text/plain");
+		sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
+		sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, body);
+
+		startActivity(Intent.createChooser(sharingIntent, chooserTitle));
+	}
+
+	private void clearKeyInput() {
 		EditText edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey1);
 		edKey.setText("");
 		edKey = (EditText) viewKeyInput.findViewById(R.id.editTextKey2);
@@ -569,26 +547,20 @@ public class MainActivity extends Activity
 		edKey.setText("");
 	}
 
-	private void showShareDialog()
-	{
+	private void showShareDialog() {
 		View view = pageHandler.getView(ViewPagerHandler.PAGE_ENDING);
-		if (null != view)
-		{
+		if (null != view) {
 			View vDialog = view.findViewById(R.id.textViewShareDialog);
-			if (null != vDialog)
-			{
+			if (null != vDialog) {
 				vDialog.setVisibility(View.VISIBLE);
 			}
 		}
 	}
 
-	private Handler selfHandler = new Handler()
-	{
+	private Handler selfHandler = new Handler() {
 		@Override
-		public void handleMessage(Message msg)
-		{
-			switch(msg.what)
-			{
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
 			case MSG_SHOW_HOME:
 				showLayout(LAYOUT_HOME);
 				break;
@@ -615,76 +587,61 @@ public class MainActivity extends Activity
 
 	};
 
-	private void fadeOutAndHideImage(final ImageView img)
-	{
+	private void fadeOutAndHideImage(final ImageView img) {
 		Animation fadeOut = new AlphaAnimation(1, 0);
 		fadeOut.setInterpolator(new AccelerateInterpolator());
 		fadeOut.setDuration(1500);
 
-		fadeOut.setAnimationListener(new AnimationListener()
-		{
-			public void onAnimationEnd(Animation animation)
-			{
+		fadeOut.setAnimationListener(new AnimationListener() {
+			public void onAnimationEnd(Animation animation) {
 				img.setImageResource(imgRes[1]);
 				fadeInAndShowImage(img);
 			}
 
-			public void onAnimationRepeat(Animation animation)
-			{
+			public void onAnimationRepeat(Animation animation) {
 			}
 
-			public void onAnimationStart(Animation animation)
-			{
+			public void onAnimationStart(Animation animation) {
 			}
 		});
 
 		img.startAnimation(fadeOut);
 	}
 
-	private void fadeInAndShowImage(final ImageView img)
-	{
+	private void fadeInAndShowImage(final ImageView img) {
 		Animation fadeIn = new AlphaAnimation(0, 1);
 		fadeIn.setInterpolator(new AccelerateInterpolator());
 		fadeIn.setDuration(1000);
 
-		fadeIn.setAnimationListener(new AnimationListener()
-		{
-			public void onAnimationEnd(Animation animation)
-			{
+		fadeIn.setAnimationListener(new AnimationListener() {
+			public void onAnimationEnd(Animation animation) {
 				selfHandler.sendEmptyMessageDelayed(MSG_SHOW_HOME, 2000);
 			}
 
-			public void onAnimationRepeat(Animation animation)
-			{
+			public void onAnimationRepeat(Animation animation) {
 			}
 
-			public void onAnimationStart(Animation animation)
-			{
+			public void onAnimationStart(Animation animation) {
 			}
 		});
 
 		img.startAnimation(fadeIn);
 	}
 
-	private void fadeInAndShowContent(final View view, final int nCallbackId)
-	{
+	private void fadeInAndShowContent(final View view, final int nCallbackId) {
 		Animation fadeIn = new AlphaAnimation(0, 1);
 		fadeIn.setInterpolator(new AccelerateInterpolator());
 		fadeIn.setDuration(1000);
 
-		fadeIn.setAnimationListener(new AnimationListener()
-		{
-			public void onAnimationEnd(Animation animation)
-			{
+		fadeIn.setAnimationListener(new AnimationListener() {
+			public void onAnimationEnd(Animation animation) {
 				selfHandler.sendEmptyMessageDelayed(nCallbackId, 100);
 			}
 
-			public void onAnimationRepeat(Animation animation)
-			{
+			public void onAnimationRepeat(Animation animation) {
 			}
 
-			public void onAnimationStart(Animation animation)
-			{
+			public void onAnimationStart(Animation animation) {
 			}
 		});
 
@@ -692,14 +649,10 @@ public class MainActivity extends Activity
 	}
 
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event)
-	{
-		if (KeyEvent.KEYCODE_BACK == keyCode)
-		{
-			if (null != flipperHandler)
-			{
-				if (-1 != flipperHandler.getShowViewId())
-				{
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (KeyEvent.KEYCODE_BACK == keyCode) {
+			if (null != flipperHandler) {
+				if (-1 != flipperHandler.getShowViewId()) {
 					flipperHandler.close();
 					return true;
 				}
