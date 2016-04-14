@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.os.Handler;
 import android.view.View;
 
-public class FlipperHandler extends BaseHandler
+public class FlipperHandler extends ViewBaseHandler
 {
 	private final int	RESOURCE_FLIPPER	= R.id.flipperViewOption;
 	private FlipperView	flipper				= null;

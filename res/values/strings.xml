@@ -22,6 +22,8 @@
     <string name="session4_title1">關卡四：</string>
     <string name="session4_title2">奇怪的地圖</string>
     <string name="key">Key</string>
+    <string name="login">登入</string>
+    <string name="skip">略過</string>
     <string name="clock">00:00:00</string>
     <string name="ending_title">愛麗絲成功找到兔子了!</string>
     <string name="share_content">趕緊和可愛的兔子\n拍照留念分享吧!</string>

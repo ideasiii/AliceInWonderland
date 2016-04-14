@@ -11,7 +11,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 
-public class ViewPagerHandler extends BaseHandler
+public class ViewPagerHandler extends ViewBaseHandler
 {
 	private ViewPager			viewPager		= null;
 	private ViewPagerAdapter	pagerAdapter	= null;

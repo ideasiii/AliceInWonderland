@@ -8,13 +8,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-public abstract class BaseHandler
+public abstract class ViewBaseHandler
 {
 	public Activity			theActivity	= null;
 	public Handler			theHandler	= null;
 	private LayoutInflater	inflater	= null;
 
-	public BaseHandler(Activity activity, Handler handler)
+	public ViewBaseHandler(Activity activity, Handler handler)
 	{
 		theActivity = activity;
 		theHandler = handler;
