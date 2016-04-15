@@ -32,6 +32,8 @@ public abstract class MSG
 	public static final int	DIALOG_CLICKED			= ID + 25;
 	public static final int	ID_LEAVE				= ID + 26;
 	public static final int	API_RESPONSE_FINISH		= ID + 28;
-	public static final int MEMBER_REGISTER         = ID + 29;
-	public static final int MEMBER_FORGET_PASSWD    = ID + 30;
+	public static final int	MEMBER_REGISTER			= ID + 29;
+	public static final int	MEMBER_FORGET_PASSWD	= ID + 30;
+	public static final int	FINISH					= ID + 31;
+	public static final int	FB_LOGIN				= ID + 32;
 }

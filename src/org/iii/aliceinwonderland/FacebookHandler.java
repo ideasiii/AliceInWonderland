@@ -30,6 +30,7 @@ public class FacebookHandler
 	private AccessToken							accessToken;
 	private LoginManager						loginManager;
 	private SparseArray<OnFacebookLoginResult>	listOnFacebookLoginResult	= null;
+	private String								mstrToken					= null;
 
 	public FacebookHandler(Activity activity)
 	{
@@ -84,12 +85,8 @@ public class FacebookHandler
 	{
 		if (null == theActivity || null == callbackManager || null == loginManager)
 			return;
-		// loginManager.logInWithReadPermissions(theActivity,
-		// Arrays.asList("email", "public_profile", "user_birthday",
-		// "user_likes", "user_location"));
 
-		loginManager.logInWithReadPermissions(theActivity,
-				Arrays.asList("email", "public_profile", "user_likes", "user_post"));
+		loginManager.logInWithReadPermissions(theActivity, Arrays.asList("email", "public_profile", "user_likes"));
 	}
 
 	private void callGraph(final AccessToken strToken)
@@ -102,14 +99,11 @@ public class FacebookHandler
 				@Override
 				public void onCompleted(JSONObject object, GraphResponse response)
 				{
+					mstrToken = strToken.getToken();
 					Logs.showTrace("Facebook Token:" + strToken.getToken());
 					Logs.showTrace("Facebook ID:" + object.optString("id"));
 					Logs.showTrace("Facebook Name:" + object.optString("name"));
-					// Logs.showTrace("Facebook Link:" +
-					// object.optString("link"));
 					Logs.showTrace("Facebook Email:" + object.optString("email"));
-					// Logs.showTrace("Facebook Birthday:" +
-					// object.optString("birthday"));
 					Logs.showTrace("Facebook Gender:" + object.optString("gender"));
 					Logs.showTrace("Facebook Locale:" + object.optString("locale"));
 					Logs.showTrace("Facebook Timezone:" + object.optString("timezone"));
@@ -153,8 +147,8 @@ public class FacebookHandler
 			{
 				if (AccessToken.getCurrentAccessToken() != null)
 				{
-					// LoginManager.getInstance().logOut();
-					// Common.postMessage(Global.mainHandler, MSG.FB_LOGIN, 0, 0, null);
+					LoginManager.getInstance().logOut();
+					Common.postMessage(Global.mainHandler, MSG.FB_LOGIN, 0, 0, null);
 				}
 			}
 			else
@@ -165,4 +159,8 @@ public class FacebookHandler
 
 	};
 
+	public String getToken()
+	{
+		return mstrToken;
+	}
 }

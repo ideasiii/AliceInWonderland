@@ -1,10 +1,8 @@
 package org.iii.aliceinwonderland;
 
 import java.util.ArrayList;
-import com.facebook.CallbackManager;
-import com.facebook.FacebookSdk;
+
 import com.facebook.appevents.AppEventsLogger;
-import com.facebook.login.LoginManager;
 import com.facebook.share.ShareApi;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.model.SharePhoto;
@@ -65,9 +63,15 @@ public class MainActivity extends Activity
 	private EditText			edKey2							= null;
 	private EditText			edKey3							= null;
 	private FacebookHandler		facebook						= null;
-
-	private CallbackManager		callbackManager;
-	private LoginManager		loginManager;
+	private Long				session1_s						= 0L;
+	private Long				session1_e						= 0L;
+	private Long				session2_s						= 0L;
+	private Long				session2_e						= 0L;
+	private Long				session3_s						= 0L;
+	private Long				session3_e						= 0L;
+	private Long				session4_s						= 0L;
+	private Long				session4_e						= 0L;
+	private Share				share							= null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -75,17 +79,8 @@ public class MainActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		this.getActionBar().hide();
+		Global.mainHandler = selfHandler;
 		showLayout(LAYOUT_WELCOME);
-
-		FacebookSdk.sdkInitialize(getApplicationContext());
-
-		/*
-		 * callbackManager = CallbackManager.Factory.create(); List<String> permissionNeeds = Arrays.asList("publish_actions"); loginManager = LoginManager.getInstance();
-		 * loginManager.logInWithPublishPermissions(this, permissionNeeds); loginManager.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-		 * @Override public void onSuccess(LoginResult loginResult) { }
-		 * @Override public void onCancel() { System.out.println("onCancel"); }
-		 * @Override public void onError(FacebookException error) { } });
-		 */
 	}
 
 	@Override
@@ -156,7 +151,7 @@ public class MainActivity extends Activity
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		super.onActivityResult(requestCode, resultCode, data);
-		// callbackManager.onActivityResult(requestCode, resultCode, data);
+		FacebookHandler.callbackManager.onActivityResult(requestCode, resultCode, data);
 	}
 
 	private void showLayout(final int nLayout)
@@ -180,9 +175,56 @@ public class MainActivity extends Activity
 			initMainHandler();
 			break;
 		case LAYOUT_LOGIN:
-			setContentView(R.layout.login);
+			showLogin();
 			break;
 		}
+	}
+
+	private void showLogin()
+	{
+		setContentView(R.layout.login);
+		findViewById(R.id.textViewLoginFacebook).setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				if (Utility.checkInternet(MainActivity.this))
+				{
+					showFacebookLogin();
+				}
+				else
+				{
+					DialogHandler.showNetworkError(MainActivity.this, false);
+				}
+			}
+		});
+		findViewById(R.id.textViewLoginSkip).setOnClickListener(new OnClickListener()
+		{
+
+			@Override
+			public void onClick(View v)
+			{
+				showLayout(LAYOUT_HOME);
+			}
+		});
+	}
+
+	private void showFacebookLogin()
+	{
+		Logs.showTrace("Facebook Login Start");
+		facebook = new FacebookHandler(this);
+		facebook.init();
+		facebook.setOnFacebookLoginResultListener(new FacebookHandler.OnFacebookLoginResult()
+		{
+			@Override
+			public void onLoginResult(String strFBID, String strName, String strEmail, String strError)
+			{
+				showLayout(LAYOUT_HOME);
+				Logs.showTrace("Login Facebook: " + strFBID + " " + strName + " " + strEmail + " " + strError);
+				Logs.showTrace("Facebook token: " + facebook.getToken());
+			}
+		});
+		facebook.login();
 	}
 
 	private void initHomeStartBtn()
@@ -305,6 +347,8 @@ public class MainActivity extends Activity
 			viewSession1 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION1);
 			fadeInAndShowContent(viewSession1.findViewById(R.id.scrollViewSession1Content),
 					MSG_SHOW_CONTENT_SESSION1_END);
+			session1_s = System.currentTimeMillis();
+			Logs.showTrace("Game Session1 start:" + String.valueOf(session1_s));
 		}
 
 	}
@@ -321,7 +365,6 @@ public class MainActivity extends Activity
 
 	private void initSession1()
 	{
-		// viewSession1.findViewById(R.id.linearLayoutSession1Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession1.findViewById(R.id.buttonSession1Key).setVisibility(View.VISIBLE);
 		viewSession1.findViewById(R.id.buttonSession1Key).setOnClickListener(new OnClickListener()
 		{
@@ -359,6 +402,8 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (693 == nKey)
 							{
+								session1_e = System.currentTimeMillis();
+								Logs.showTrace("Game Session1 end:" + String.valueOf(session1_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
 										.setOnClickListener(new OnClickListener()
@@ -372,6 +417,8 @@ public class MainActivity extends Activity
 												fadeInAndShowContent(
 														viewSession2.findViewById(R.id.scrollViewSession2Content),
 														MSG_SHOW_CONTENT_SESSION2_END);
+												session2_s = System.currentTimeMillis();
+												Logs.showTrace("Game Session2 start:" + String.valueOf(session2_s));
 											}
 										});
 							}
@@ -400,7 +447,6 @@ public class MainActivity extends Activity
 
 	private void initSession2()
 	{
-		// viewSession2.findViewById(R.id.linearLayoutSession2Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession2.findViewById(R.id.buttonSession2Key).setVisibility(View.VISIBLE);
 		viewSession2.findViewById(R.id.buttonSession2Key).setOnClickListener(new OnClickListener()
 		{
@@ -442,6 +488,8 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (786 == nKey)
 							{
+								session2_e = System.currentTimeMillis();
+								Logs.showTrace("Game Session2 end:" + String.valueOf(session2_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
 										.setOnClickListener(new OnClickListener()
@@ -455,6 +503,8 @@ public class MainActivity extends Activity
 												fadeInAndShowContent(
 														viewSession3.findViewById(R.id.scrollViewSession3Content),
 														MSG_SHOW_CONTENT_SESSION3_END);
+												session3_s = System.currentTimeMillis();
+												Logs.showTrace("Game Session3 start:" + String.valueOf(session3_s));
 											}
 										});
 							}
@@ -483,7 +533,6 @@ public class MainActivity extends Activity
 
 	private void initSession3()
 	{
-		// viewSession3.findViewById(R.id.linearLayoutSession3Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession3.findViewById(R.id.buttonSession3Key).setVisibility(View.VISIBLE);
 		viewSession3.findViewById(R.id.buttonSession3Key).setOnClickListener(new OnClickListener()
 		{
@@ -525,6 +574,8 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (321 == nKey)
 							{
+								session3_e = System.currentTimeMillis();
+								Logs.showTrace("Game Session3 end:" + String.valueOf(session3_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
 										.setOnClickListener(new OnClickListener()
@@ -538,6 +589,8 @@ public class MainActivity extends Activity
 												fadeInAndShowContent(
 														viewSession4.findViewById(R.id.scrollViewSession4Content),
 														MSG_SHOW_CONTENT_SESSION4_END);
+												session4_s = System.currentTimeMillis();
+												Logs.showTrace("Game Session4 start:" + String.valueOf(session4_s));
 											}
 										});
 							}
@@ -567,7 +620,6 @@ public class MainActivity extends Activity
 
 	private void initSession4()
 	{
-		// viewSession4.findViewById(R.id.linearLayoutSession4Main).setBackgroundResource(R.color.Black_Gray_Deep);
 		viewSession4.findViewById(R.id.buttonSession4Key).setVisibility(View.VISIBLE);
 		viewSession4.findViewById(R.id.buttonSession4Key).setOnClickListener(new OnClickListener()
 		{
@@ -609,6 +661,8 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (245 == nKey)
 							{
+								session4_e = System.currentTimeMillis();
+								Logs.showTrace("Game Session4 end:" + String.valueOf(session4_e));
 								showEnding();
 							}
 							else
@@ -637,6 +691,13 @@ public class MainActivity extends Activity
 
 	private void showEnding()
 	{
+		Long ltotalTime = session4_e - session1_s;
+
+		String strTime = formatTime(ltotalTime);
+
+		TextView tvTime = (TextView) pageHandler.getView(ViewPagerHandler.PAGE_ENDING)
+				.findViewById(R.id.textViewEndingTime);
+		tvTime.setText(strTime);
 		pageHandler.getView(ViewPagerHandler.PAGE_ENDING).findViewById(R.id.imageViewEndingShare)
 				.setOnClickListener(new OnClickListener()
 				{
@@ -645,7 +706,10 @@ public class MainActivity extends Activity
 					public void onClick(View v)
 					{
 						// shareTo("facebook", "hi", "分享");
-						sharePhotoToFacebook();
+						// sharePhotoToFacebook();
+						// share = new Share(MainActivity.this);
+						// share.shareAll("title", "strSubject", "strMessage", null);
+						showCamera();
 					}
 				});
 
@@ -653,6 +717,18 @@ public class MainActivity extends Activity
 		pageHandler.showPage(ViewPagerHandler.PAGE_ENDING);
 		selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE_DIALOG, 3000);
 
+	}
+
+	private String formatTime(Long lMillsecond)
+	{
+		// 計算目前已過分鐘數
+		int minius = (int) ((lMillsecond / 1000) / 60);
+		// 計算目前已過秒數
+		int seconds = (int) ((lMillsecond / 1000) % 60);
+		// 計算目前已過小時
+		int hourse = minius / 60;
+		String strTime = String.format("%02d:%02d:%02d", hourse, minius, seconds);
+		return strTime;
 	}
 
 	private void shareTo(String subject, String body, String chooserTitle)
@@ -719,6 +795,10 @@ public class MainActivity extends Activity
 				break;
 			case MSG_SHOW_LOGIN:
 				showLayout(LAYOUT_LOGIN);
+				break;
+			case MSG.FB_LOGIN:
+				Logs.showTrace("Facebook Relogin");
+				facebook.login();
 				break;
 			}
 		}
@@ -818,6 +898,12 @@ public class MainActivity extends Activity
 
 		}
 		return super.onKeyDown(keyCode, event);
+	}
+
+	private void showCamera()
+	{
+		Intent openCameraIntent = new Intent(MainActivity.this, CameraActivity.class);
+		startActivityForResult(openCameraIntent, 666);
 	}
 
 }

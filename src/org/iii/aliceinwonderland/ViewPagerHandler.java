@@ -15,7 +15,7 @@ public class ViewPagerHandler extends ViewBaseHandler
 {
 	private ViewPager			viewPager		= null;
 	private ViewPagerAdapter	pagerAdapter	= null;
-	public static int			PAGE_INTRO;
+//	public static int			PAGE_INTRO;
 	public static int			PAGE_SESSION1;
 	public static int			PAGE_SESSION2;
 	public static int			PAGE_SESSION3;
@@ -49,8 +49,8 @@ public class ViewPagerHandler extends ViewBaseHandler
 		LayoutInflater Inflater = LayoutInflater.from(theActivity);
 		pagerAdapter = new ViewPagerAdapter();
 
-		PAGE_INTRO = pagerAdapter.addPage(Inflater.inflate(R.layout.intro, null),
-				theActivity.getString(R.string.introduction));
+//		PAGE_INTRO = pagerAdapter.addPage(Inflater.inflate(R.layout.intro, null),
+//				theActivity.getString(R.string.introduction));
 		PAGE_SESSION1 = pagerAdapter.addPage(Inflater.inflate(R.layout.session1, null),
 				theActivity.getString(R.string.session1_title2));
 		PAGE_SESSION2 = pagerAdapter.addPage(Inflater.inflate(R.layout.session2, null),
