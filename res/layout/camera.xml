@@ -1,25 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativeLayoutScanMain"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:layout_height="match_parent" >
 
-    <RelativeLayout
-        android:id="@+id/relativeLayoutScanMain"
+    <SurfaceView
+        android:id="@+id/surfaceViewScanner"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent" />
 
-        <SurfaceView
-            android:id="@+id/surfaceViewScanner"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+    <ImageView
+        android:id="@+id/imageViewCameraRabbit"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/content_description"
+        android:src="@drawable/camera_rabbit2" />
 
-        <ImageView
-            android:id="@+id/imageViewCameraRabbit"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/camera_rabbit2" />
+    <ImageView
+        android:id="@+id/imageViewGetPicture"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="20dp"
+        android:contentDescription="@string/content_description"
+        android:src="@drawable/camera" />
 
-    </RelativeLayout>
-
-</LinearLayout>
+</RelativeLayout>

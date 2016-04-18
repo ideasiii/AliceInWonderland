@@ -1,15 +1,30 @@
 package org.iii.aliceinwonderland;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
+import android.hardware.Camera.Parameters;
+import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 public final class CameraHandler
@@ -23,6 +38,10 @@ public final class CameraHandler
 	private final int				MSG_AUTO_FOCUS				= 111;
 	private OnPreviewListener		onPreviewListener			= null;
 	private boolean					bAutoFocus					= true;
+	public static final int			FRONT						= 1;	// 前鏡頭
+	public static final int			BACK						= 2;	// 後鏡頭
+	// 0表示后置，1表示前置
+	private int						cameraPosition				= 1;
 
 	public static interface OnPreviewListener
 	{
@@ -41,6 +60,13 @@ public final class CameraHandler
 		{
 			useOneShotPreviewCallback = true;
 		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable
+	{
+		release();
+		super.finalize();
 	}
 
 	public static CameraHandler getInstance(Context context)
@@ -63,14 +89,76 @@ public final class CameraHandler
 		return camera.getParameters().getPreviewFormat();
 	}
 
-	public void open(SurfaceHolder holder) throws IOException
+	public Camera switchCamera(SurfaceHolder holder)
+	{
+		int cameraCount = 0;
+		CameraInfo cameraInfo = new CameraInfo();
+		cameraCount = Camera.getNumberOfCameras();
+
+		for (int i = 0; i < cameraCount; i++)
+		{
+			Camera.getCameraInfo(i, cameraInfo);
+			if (cameraPosition == 1)
+			{
+				if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT)
+				{
+					release();
+					return Camera.open(i);
+				}
+			}
+			else
+			{
+				if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK)
+				{
+					release();
+					return Camera.open(i);
+				}
+			}
+
+		}
+		return null;
+	}
+
+	private Camera openCamera(int type)
+	{
+
+		int frontIndex = -1;
+		int backIndex = -1;
+		int cameraCount = Camera.getNumberOfCameras();
+		CameraInfo info = new CameraInfo();
+		for (int cameraIndex = 0; cameraIndex < cameraCount; cameraIndex++)
+		{
+			Camera.getCameraInfo(cameraIndex, info);
+			if (info.facing == CameraInfo.CAMERA_FACING_FRONT)
+			{
+				frontIndex = cameraIndex;
+			}
+			else if (info.facing == CameraInfo.CAMERA_FACING_BACK)
+			{
+				backIndex = cameraIndex;
+			}
+		}
+
+		if (type == FRONT && frontIndex != -1)
+		{
+			return Camera.open(frontIndex);
+		}
+		else if (type == BACK && backIndex != -1)
+		{
+			return Camera.open(backIndex);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("deprecation")
+	public void open(SurfaceHolder holder, final int nType) throws IOException
 	{
 		if (null == camera)
 		{
-			Logs.showTrace("Camera Open");
-			camera = Camera.open();
+			camera = openCamera(nType);
 			if (null == camera)
 			{
+				Logs.showTrace("Camera Open Exception");
 				throw new IOException();
 			}
 			camera.setPreviewDisplay(holder);
@@ -83,12 +171,6 @@ public final class CameraHandler
 			screenResolutionForCamera.x = screenResolution.x;
 			screenResolutionForCamera.y = screenResolution.y;
 
-		/*	if (screenResolution.x < screenResolution.y)
-			{
-				screenResolutionForCamera.x = screenResolution.y;
-				screenResolutionForCamera.y = screenResolution.x;
-			}
-			*/
 			cameraResolution = getCameraResolution(parameters, screenResolutionForCamera);
 			parameters.setPreviewSize(cameraResolution.x, cameraResolution.y);
 			if (Build.MODEL.contains("Behold II") && Device.getSdkVer() == 3)
@@ -101,8 +183,7 @@ public final class CameraHandler
 			}
 			parameters.set("flash-mode", "off");
 			setZoom(parameters);
-
-		//	camera.setDisplayOrientation(90);
+			parameters.setPictureFormat(ImageFormat.JPEG);
 			camera.setParameters(parameters);
 		}
 	}
@@ -309,19 +390,27 @@ public final class CameraHandler
 		{
 			camera.setPreviewCallback(previewCallback);
 		}
-		camera.autoFocus(autoFocusCallback);
+		// camera.autoFocus(autoFocusCallback);
 	}
 
 	public void stopPreview()
 	{
-		camera.stopPreview();
-		camera.setPreviewCallback(null);
+		if (null != camera)
+		{
+			camera.stopPreview();
+			camera.setPreviewCallback(null);
+		}
 	}
 
 	public void release()
 	{
-		camera.release();
-		camera = null;
+		if (null != camera)
+		{
+			camera.setPreviewCallback(null);
+			camera.stopPreview();
+			camera.release();
+			camera = null;
+		}
 	}
 
 	public void setAutoFocus(boolean bEnable)
@@ -333,48 +422,120 @@ public final class CameraHandler
 		}
 	}
 
-	private Camera.PreviewCallback previewCallback = new Camera.PreviewCallback()
+	public void setCameraFocus()
 	{
-		@Override
-		public void onPreviewFrame(byte[] data, Camera camera)
+		if (null != camera)
 		{
-			Logs.showTrace("Camera Preview Callback");
-			if (null != onPreviewListener)
-			{
-				onPreviewListener.onPreview(data);
-			}
+			camera.autoFocus(autoFocusCallback);
 		}
-	};
+	}
 
-	private Camera.AutoFocusCallback autoFocusCallback = new Camera.AutoFocusCallback()
+	public void takePicture()
 	{
-		@Override
-		public void onAutoFocus(boolean success, Camera camera)
+		if (null != camera)
 		{
-			Logs.showTrace("Camera Auto Focus Callback");
-			if (bAutoFocus)
-			{
-				handler.sendEmptyMessageDelayed(MSG_AUTO_FOCUS, 500);
-			}
+			camera.takePicture(null, null, picture);
 		}
-	};
+	}
 
-	private Handler handler = new Handler()
+	public String getSdcardPath()
 	{
-
-		@Override
-		public void handleMessage(Message msg)
+		File sdDir = null;
+		boolean sdCardExist = Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
+		if (sdCardExist)
 		{
-			switch (msg.what)
-			{
-				case MSG_AUTO_FOCUS:
-					if (null != camera)
-					{
-						camera.autoFocus(autoFocusCallback);
-						startPreview();
-					}
-					break;
-			}
+			sdDir = Environment.getExternalStorageDirectory();
+			return sdDir.toString() + File.separator;
 		}
-	};
+
+		return null;
+	}
+
+	public Bitmap convertBmp(Bitmap bmp)
+	{
+		int w = bmp.getWidth();
+		int h = bmp.getHeight();
+
+		Matrix matrix = new Matrix();
+		matrix.postScale(-1, 1); // 镜像水平翻转
+		Bitmap convertBmp = Bitmap.createBitmap(bmp, 0, 0, w, h, matrix, true);
+
+		return convertBmp;
+	}
+
+	@SuppressWarnings("deprecation")
+	private PictureCallback				picture				= new PictureCallback()
+															{
+																@Override
+																public void onPictureTaken(byte[] data, Camera camera)
+																{
+																	try
+																	{
+
+																		String mstrPicturePath = getSdcardPath()
+																				+ "Download" + File.separator
+																				+ "alice.png";
+																		Bitmap bm = convertBmp(BitmapFactory
+																				.decodeByteArray(data, 0, data.length));
+																		File file = new File(mstrPicturePath);
+																		BufferedOutputStream bos = new BufferedOutputStream(
+																				new FileOutputStream(file));
+																		bm.compress(Bitmap.CompressFormat.JPEG, 100,
+																				bos);
+
+																		bos.flush();
+																		bos.close();
+																		bm.recycle();
+																		Logs.showTrace("save picture");
+																	}
+																	catch (IOException e)
+																	{
+																		// TODO Auto-generated catch block
+																		e.printStackTrace();
+																	}
+
+																}
+															};
+
+	private Camera.PreviewCallback		previewCallback		= new Camera.PreviewCallback()
+															{
+																@Override
+																public void onPreviewFrame(byte[] data, Camera camera)
+																{
+																	Logs.showTrace("Camera Preview Callback");
+																	if (null != onPreviewListener)
+																	{
+																		onPreviewListener.onPreview(data);
+																	}
+																}
+															};
+
+	private Camera.AutoFocusCallback	autoFocusCallback	= new Camera.AutoFocusCallback()
+															{
+																@Override
+																public void onAutoFocus(boolean success, Camera camera)
+																{
+																	Logs.showTrace("Camera Auto Focus Callback");
+																	// camera.takePicture(null, null, picture);
+																}
+															};
+
+	private Handler						handler				= new Handler()
+															{
+
+																@Override
+																public void handleMessage(Message msg)
+																{
+																	switch(msg.what)
+																	{
+																	case MSG_AUTO_FOCUS:
+																		if (null != camera)
+																		{
+																			camera.autoFocus(autoFocusCallback);
+																			startPreview();
+																		}
+																		break;
+																	}
+																}
+															};
 }
