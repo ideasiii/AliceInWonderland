@@ -3,191 +3,320 @@ package org.iii.aliceinwonderland;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Point;
-import android.net.Uri;
+import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.hardware.Camera;
+import android.hardware.Camera.Face;
+import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.FrameLayout;
 
+@SuppressWarnings("deprecation")
 public class CameraActivity extends Activity
 {
-
-	private CameraHandler	cameraHandler	= null;
-	private SurfaceView		surfaceView		= null;
-	private SurfaceHolder	surfaceHolder	= null;
-	private RelativeLayout	contain			= null;
-	private String			mstrPicturePath	= null;
-
-	public CameraActivity()
-	{
-
-	}
+	private Camera			mCamera;
+	private CameraPreview	mPreview;
+	private String			mstrPicPath	= null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-
 		setContentView(R.layout.camera);
-		surfaceView = (SurfaceView) this.findViewById(R.id.surfaceViewScanner);
-		surfaceHolder = surfaceView.getHolder();
-		surfaceHolder.addCallback(surfaceHolderCallback);
-		cameraHandler = CameraHandler.getInstance(this);
-		cameraHandler.setOnPreviewListener(previewListener);
-		contain = (RelativeLayout) this.findViewById(R.id.relativeLayoutScanMain);
-		mstrPicturePath = getSdcardPath() + "Download" + File.separator + "alice.png";
-		Logs.showTrace("Alice Picture path:" + mstrPicturePath);
 
-		this.findViewById(R.id.imageViewGetPicture).setOnClickListener(new OnClickListener()
+		if (checkCameraHardware(this))
 		{
-			@Override
-			public void onClick(View v)
+			mCamera = getCameraInstance(Camera.CameraInfo.CAMERA_FACING_FRONT, this);
+			mCamera.setFaceDetectionListener(new MyFaceDetectionListener());
+			mPreview = new CameraPreview(this, mCamera);
+			FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+			preview.addView(mPreview);
+			// Add a listener to the Capture button
+			findViewById(R.id.imageViewCameraCapture).setOnClickListener(new View.OnClickListener()
 			{
-				// cameraHandler.setFocus();
-				// exportBitmap(contain, mstrPicturePath);
-				// takeScreenshot();
-				cameraHandler.takePicture();
-				Logs.showTrace("Capture picture!!");
-			}
-		});
-
-	}
-
-	public String getSdcardPath()
-	{
-		File sdDir = null;
-		boolean sdCardExist = Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
-		if (sdCardExist)
-		{
-			sdDir = Environment.getExternalStorageDirectory();
-			return sdDir.toString() + File.separator;
+				@Override
+				public void onClick(View v)
+				{
+					// get an image from the camera
+					mCamera.takePicture(null, null, mPicture);
+				}
+			});
 		}
 
-		return null;
 	}
 
-	private boolean exportBitmap(View view, String strPath)
+	@Override
+	protected void onPause()
 	{
-		Bitmap bitmap = Bitmap.createBitmap(Device.getWidth(this), Device.getHeight(this), Bitmap.Config.ARGB_8888);
-		Canvas c = new Canvas(bitmap);
-		view.draw(c);
+		// TODO Auto-generated method stub
+		super.onPause();
+		releaseCamera(); // release the camera immediately on pause event
+	}
 
-		FileOutputStream out;
+	/** Check if this device has a camera */
+	private boolean checkCameraHardware(Context context)
+	{
+		if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA))
+		{
+			// this device has a camera
+			return true;
+		}
+		else
+		{
+			// no camera on this device
+			return false;
+		}
+	}
+
+	/** A safe way to get an instance of the Camera object. */
+	public static Camera getCameraInstance(int nType, Context context)
+	{
+		Camera c = null;
 		try
 		{
-			out = new FileOutputStream(strPath);
-			bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-			Logs.showTrace("exportBitmap success");
-			return true;
+			c = Camera.open(nType); // attempt to get a Camera instance
+			Camera.Parameters parameters = c.getParameters();
+			parameters.setPreviewSize(1280, 720);
+			parameters.setPictureSize(1280, 720);
+			parameters.setAutoWhiteBalanceLock(true);
+			parameters.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_AUTO);
+			parameters.setPictureFormat(ImageFormat.JPEG);
+			parameters.setPreviewFrameRate(29);
+			parameters.setJpegQuality(100);
+			if (isSupportZoom(c))
+			{
+				parameters.setZoom(1);
+			}
+
+			c.setParameters(parameters);
+			Logs.showTrace("Camera Opened");
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
-			Logs.showTrace("exportBitmap exception:" + e.toString());
+			Logs.showError("Camera is not available (in use or does not exist) Exception: " + e.getMessage());
 		}
-		return false;
+		return c; // returns null if camera is unavailable
 	}
 
-	private void takeScreenshot()
+	/** A basic Camera preview class */
+	public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	{
-		Date now = new Date();
-		android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
+		private SurfaceHolder	mHolder;
+		private Camera			mCamera;
 
+		public CameraPreview(Context context, Camera camera)
+		{
+			super(context);
+			mCamera = camera;
+
+			// Install a SurfaceHolder.Callback so we get notified when the
+			// underlying surface is created and destroyed.
+			mHolder = getHolder();
+			mHolder.addCallback(this);
+			// deprecated setting, but required on Android versions prior to 3.0
+			mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		}
+
+		public void surfaceCreated(SurfaceHolder holder)
+		{
+			// The Surface has been created, now tell the camera where to draw
+			// the preview.
+			try
+			{
+				mCamera.setPreviewDisplay(holder);
+				mCamera.startPreview();
+				// startFaceDetection();
+			}
+			catch (IOException e)
+			{
+				Logs.showError("Error setting camera preview: " + e.getMessage());
+			}
+		}
+
+		public void surfaceDestroyed(SurfaceHolder holder)
+		{
+
+		}
+
+		public void surfaceChanged(SurfaceHolder holder, int format, int w, int h)
+		{
+			// If your preview can change or rotate, take care of those events
+			// here.
+			// Make sure to stop the preview before resizing or reformatting it.
+
+			if (mHolder.getSurface() == null)
+			{
+				return;
+			}
+
+			// stop preview before making changes
+			try
+			{
+				mCamera.stopPreview();
+			}
+			catch (Exception e)
+			{
+				Logs.showError("Error stopping camera preview: " + e.getMessage());
+			}
+
+			// set preview size and make any resize, rotate or
+			// reformatting changes here
+
+			// start preview with new settings
+			try
+			{
+				mCamera.setPreviewDisplay(mHolder);
+				mCamera.startPreview();
+				// startFaceDetection(); // re-start face detection feature
+
+			}
+			catch (Exception e)
+			{
+				Logs.showError("Error starting camera preview: " + e.getMessage());
+			}
+		}
+	}
+
+	public Bitmap convertBmp(Bitmap bmp)
+	{
+		int w = bmp.getWidth();
+		int h = bmp.getHeight();
+
+		Matrix matrix = new Matrix();
+		matrix.postScale(-1, 1); // 镜像水平翻转
+		Bitmap convertBmp = Bitmap.createBitmap(bmp, 0, 0, w, h, matrix, true);
+
+		return convertBmp;
+	}
+
+	private PictureCallback mPicture = new PictureCallback()
+	{
+
+		@Override
+		public void onPictureTaken(byte[] data, Camera camera)
+		{
+			Bitmap bmPhoto = convertBmp(BitmapFactory.decodeByteArray(data, 0, data.length));
+			Bitmap bmRabbit = BitmapFactory.decodeResource(getResources(), R.drawable.camera_rabbit2);
+			Bitmap bmCombine = combineBitmap(bmPhoto, bmRabbit);
+			SaveImage(bmCombine);
+			bmCombine.recycle();
+			bmRabbit.recycle();
+			bmPhoto.recycle();
+			close();
+		}
+	};
+
+	private void SaveImage(Bitmap finalBitmap)
+	{
+
+		String root = Environment.getExternalStorageDirectory().toString();
+		File myDir = new File(root + "/underbox");
+		if (!myDir.exists())
+			myDir.mkdirs();
+
+		File file = new File(myDir, "alice.jpg");
+		if (file.exists())
+			file.delete();
 		try
 		{
-			// image naming and path to include sd card appending name you choose for file
-			String mPath = Environment.getExternalStorageDirectory().toString() + "/" + now + ".jpg";
-
-			// create bitmap screen capture
-			View v1 = getWindow().getDecorView().getRootView();
-			v1.setDrawingCacheEnabled(true);
-			Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
-			v1.setDrawingCacheEnabled(false);
-
-			File imageFile = new File(mPath);
-
-			FileOutputStream outputStream = new FileOutputStream(imageFile);
-			int quality = 100;
-			bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
-			outputStream.flush();
-			outputStream.close();
-
-			openScreenshot(imageFile);
+			FileOutputStream out = new FileOutputStream(file);
+			finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+			out.flush();
+			out.close();
+			mstrPicPath = file.getPath();
 		}
-		catch (Throwable e)
+		catch (Exception e)
 		{
-			// Several error may come out with file handling or OOM
-			e.printStackTrace();
+			Logs.showError("Save Image Exception: " + e.getMessage());
 		}
 	}
 
-	private void openScreenshot(File imageFile)
+	private void releaseCamera()
 	{
-		Intent intent = new Intent();
-		intent.setAction(Intent.ACTION_VIEW);
-		Uri uri = Uri.fromFile(imageFile);
-		intent.setDataAndType(uri, "image/*");
-		startActivity(intent);
+		if (mCamera != null)
+		{
+			mCamera.release(); // release the camera for other applications
+			mCamera = null;
+			Logs.showTrace("Camera Released");
+		}
 	}
 
-	private CameraHandler.OnPreviewListener	previewListener			= new CameraHandler.OnPreviewListener()
-																	{
-																		@Override
-																		public void onPreview(byte[] data)
-																		{
-																			Logs.showTrace("Get Preview Data:"
-																					+ data.toString());
+	class MyFaceDetectionListener implements Camera.FaceDetectionListener
+	{
+		@Override
+		public void onFaceDetection(Face[] faces, Camera camera)
+		{
+			if (faces.length > 0)
+			{
+				Logs.showTrace("face detected: " + faces.length + " Face 1 Location X: " + faces[0].rect.centerX()
+						+ "Y: " + faces[0].rect.centerY());
+			}
 
-																		}
-																	};
+		}
+	}
 
-	private SurfaceHolder.Callback			surfaceHolderCallback	= new SurfaceHolder.Callback()
-																	{
-																		@Override
-																		public void surfaceCreated(SurfaceHolder holder)
-																		{
-																			Logs.showTrace("surfaceCreated");
+	public void startFaceDetection()
+	{
+		// Try starting Face Detection
+		Camera.Parameters params = mCamera.getParameters();
 
-																			try
-																			{
-																				cameraHandler.open(surfaceHolder,
-																						CameraHandler.FRONT);
-																				cameraHandler.setAutoFocus(false);
-																				cameraHandler.startPreview();
-																			}
-																			catch (IOException e)
-																			{
-																				Logs.showError(
-																						"Exception: " + e.getMessage());
-																			}
+		// start face detection only *after* preview has started
+		if (params.getMaxNumDetectedFaces() > 0)
+		{
+			// camera supports face detection, so can start it:
+			mCamera.startFaceDetection();
+		}
+	}
 
-																		}
+	private static boolean isSupportZoom(Camera camera)
+	{
+		boolean isSuppport = false;
+		if (null != camera && camera.getParameters().isZoomSupported())
+		{
+			isSuppport = true;
+		}
+		return isSuppport;
+	}
 
-																		@Override
-																		public void surfaceChanged(SurfaceHolder holder,
-																				int format, int width, int height)
-																		{
-																			Logs.showTrace("surfaceChanged");
+	public static Bitmap combineBitmap(Bitmap background, Bitmap foreground)
+	{
+		if (background == null)
+		{
+			return null;
+		}
+		int bgWidth = background.getWidth();
+		int bgHeight = background.getHeight();
+		int fgWidth = foreground.getWidth();
+		int fgHeight = foreground.getHeight();
+		Bitmap newmap = Bitmap.createBitmap(bgWidth, bgHeight, Config.ARGB_8888);
+		Canvas canvas = new Canvas(newmap);
+		canvas.drawBitmap(background, 0, 0, null);
+		canvas.drawBitmap(foreground, (bgWidth - fgWidth), (bgHeight - fgHeight), null);
+		canvas.save(Canvas.ALL_SAVE_FLAG);
+		canvas.restore();
+		return newmap;
+	}
 
-																		}
-
-																		@Override
-																		public void surfaceDestroyed(
-																				SurfaceHolder holder)
-																		{
-																			Logs.showTrace("surfaceDestroyed");
-																			cameraHandler.release();
-																		}
-																	};
+	private void close()
+	{
+		Bundle bundle = new Bundle();
+		bundle.putString("picture", mstrPicPath);
+		Intent intent = new Intent();
+		intent.putExtras(bundle);
+		setResult(RESULT_OK, intent);
+		finish();
+	}
 }

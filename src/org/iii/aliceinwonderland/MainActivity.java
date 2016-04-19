@@ -1,6 +1,7 @@
 package org.iii.aliceinwonderland;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.share.ShareApi;
@@ -20,6 +21,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,6 +33,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import sdk.ideas.common.OnCallbackResult;
+import sdk.ideas.common.ResponseCode;
+import sdk.ideas.ctrl.bluetooth.BluetoothHandler;
 
 public class MainActivity extends Activity
 {
@@ -49,6 +54,8 @@ public class MainActivity extends Activity
 	private final int			MSG_SHOW_CONTENT_SESSION4_END	= 33;
 	private final int			MSG_SHOW_SHARE_DIALOG			= 34;
 	private final int			MSG_SHOW_LOGIN					= 35;
+	private final int			REQUEST_CODE_CAMERA				= 666;
+	private final String		BT_NAME							= "150737-R30A-IDS";							// "HC-05";
 
 	private ViewPagerHandler	pageHandler						= null;
 	private FlipperHandler		flipperHandler					= null;
@@ -72,6 +79,8 @@ public class MainActivity extends Activity
 	private Long				session4_s						= 0L;
 	private Long				session4_e						= 0L;
 	private Share				share							= null;
+	private BluetoothHandler	mBluetoothHandler				= null;
+	private boolean				mbBTEnable						= false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -81,11 +90,13 @@ public class MainActivity extends Activity
 		this.getActionBar().hide();
 		Global.mainHandler = selfHandler;
 		showLayout(LAYOUT_WELCOME);
+		Logs.showTrace("Alice on Create");
 	}
 
 	@Override
 	protected void onResume()
 	{
+		Logs.showTrace("onResume");
 		super.onResume();
 		AppEventsLogger.activateApp(this);
 	}
@@ -93,8 +104,101 @@ public class MainActivity extends Activity
 	@Override
 	protected void onPause()
 	{
+		Logs.showTrace("onPause");
+		// mBluetoothHandler.stopListenAction();
 		super.onPause();
 		AppEventsLogger.deactivateApp(this);
+	}
+
+	@Override
+	protected void onStop()
+	{
+		Logs.showTrace("onStop");
+
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		Logs.showTrace("onDestroy");
+		if (null != mBluetoothHandler)
+		{
+			mBluetoothHandler.stopListenAction();
+			mBluetoothHandler.setBluetooth(false);
+		}
+		else
+		{
+			Logs.showTrace("BT is null");
+		}
+		super.onDestroy();
+	}
+
+	private void initBluetooth()
+	{
+		Logs.showTrace("initBluetooth........");
+		mBluetoothHandler = new BluetoothHandler(this);
+		mBluetoothHandler.startListenAction();
+
+		mBluetoothHandler.setOnCallbackResultListener(new OnCallbackResult()
+		{
+
+			@Override
+			public void onCallbackResult(final int result, final int what, final int from,
+					final HashMap<String, String> message)
+			{
+
+				Logs.showTrace("bluetooth lisetener Result: " + String.valueOf(result) + " What: "
+						+ String.valueOf(what) + " From: " + String.valueOf(from) + " Message: " + message);
+
+				if (from == ResponseCode.METHOD_BLUETOOTH_DISCOVERING_NEW_DEVICE)
+				{
+
+					if (null != message.get("deviceName") && message.get("deviceName").equals(BT_NAME))
+					{
+						// mbBTEnable = true;
+						mBluetoothHandler.stopDiscovery();
+						Logs.showTrace("BT get " + BT_NAME);
+					}
+				}
+				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_BOND_STATE_CHANGE_BLUETOOTH)
+				{
+					Logs.showTrace("METHOD_BOND_STATE_CHANGE_BLUETOOTH");
+					if (message.get("state").equals("BOND_NONE"))
+					{
+						Logs.showTrace("配對失敗");
+						mbBTEnable = false;
+					}
+					else if (message.get("state").equals("BOND_BONDED"))
+					{
+						Logs.showTrace("配對成功");
+						mbBTEnable = true;
+					}
+
+				}
+				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.BLUETOOTH_IS_ON)
+				{
+					Logs.showTrace("BT start to request Discoverable");
+					mBluetoothHandler.requestBluetoothDiscoverable();
+
+					// mBluetoothHandler.requestBluetoothDiscoverable();
+
+				}
+				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_DISCOVERABLE_BLUETOOTH)
+				{
+					Logs.showTrace("BT start to discover");
+					mBluetoothHandler.startDiscovery();
+				}
+				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_BLUETOOTH_DISCOVER_FINISHED)
+				{
+					mBluetoothHandler.connectDeviceByName(BT_NAME);
+
+				}
+			}
+		});
+
+		mBluetoothHandler.setBluetooth(true);
+
 	}
 
 	private void sharePhotoToFacebook()
@@ -151,7 +255,34 @@ public class MainActivity extends Activity
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		super.onActivityResult(requestCode, resultCode, data);
-		FacebookHandler.callbackManager.onActivityResult(requestCode, resultCode, data);
+		if (REQUEST_CODE_CAMERA == requestCode)
+		{
+			Logs.showTrace("Camera Activity Finish and Call Result");
+			if (resultCode == RESULT_OK)
+			{
+				Bundle extras = data.getExtras();
+				if (extras != null)
+				{
+					Logs.showTrace("Camera picture path: " + extras.getString("picture"));
+					share = new Share(MainActivity.this);
+					SparseArray<String> listImagePath = new SparseArray<String>();
+					listImagePath.append(0, extras.getString("picture"));
+					share.shareAll("title", "strSubject", "strMessage", listImagePath);
+					listImagePath.clear();
+					listImagePath = null;
+					// showLayout(LAYOUT_HOME);
+					selfHandler.sendEmptyMessageDelayed(MSG_SHOW_HOME, 2000);
+				}
+			}
+		}
+		else
+		{
+			FacebookHandler.callbackManager.onActivityResult(requestCode, resultCode, data);
+			if (null != mBluetoothHandler)
+			{
+				mBluetoothHandler.onActivityResult(requestCode, resultCode, data);
+			}
+		}
 	}
 
 	private void showLayout(final int nLayout)
@@ -204,8 +335,8 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				//showLayout(LAYOUT_HOME);
-				showCamera();
+				initBluetooth();
+				showLayout(LAYOUT_HOME);
 			}
 		});
 	}
@@ -220,6 +351,7 @@ public class MainActivity extends Activity
 			@Override
 			public void onLoginResult(String strFBID, String strName, String strEmail, String strError)
 			{
+				initBluetooth();
 				showLayout(LAYOUT_HOME);
 				Logs.showTrace("Login Facebook: " + strFBID + " " + strName + " " + strEmail + " " + strError);
 				Logs.showTrace("Facebook token: " + facebook.getToken());
@@ -403,6 +535,11 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (693 == nKey)
 							{
+								if (mbBTEnable)
+								{
+									mBluetoothHandler.sendData("a");
+								}
+
 								session1_e = System.currentTimeMillis();
 								Logs.showTrace("Game Session1 end:" + String.valueOf(session1_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
@@ -904,7 +1041,8 @@ public class MainActivity extends Activity
 	private void showCamera()
 	{
 		Intent openCameraIntent = new Intent(MainActivity.this, CameraActivity.class);
-		startActivityForResult(openCameraIntent, 666);
+		openCameraIntent.putExtra("time", "00:00:00");
+		startActivityForResult(openCameraIntent, REQUEST_CODE_CAMERA);
 	}
 
 }

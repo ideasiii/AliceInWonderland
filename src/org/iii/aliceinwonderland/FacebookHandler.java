@@ -135,8 +135,10 @@ public class FacebookHandler
 		@Override
 		public void onCancel()
 		{
-			Logs.showTrace("Facebook Login Cancel");
-			callbackFacebookResult(null, null, null, "Facebook Login Cancel");
+			Logs.showTrace("Facebook Login Cancel Relogin");
+			LoginManager.getInstance().logOut();
+			Common.postMessage(Global.mainHandler, MSG.FB_LOGIN, 0, 0, null);
+			// callbackFacebookResult(null, null, null, "Facebook Login Cancel");
 		}
 
 		@Override
