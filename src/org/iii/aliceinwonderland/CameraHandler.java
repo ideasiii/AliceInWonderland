@@ -2,11 +2,8 @@ package org.iii.aliceinwonderland;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.regex.Pattern;
 
 import android.content.Context;
@@ -17,16 +14,15 @@ import android.graphics.Matrix;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
-import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
+@SuppressWarnings("deprecation")
 public final class CameraHandler
 {
 	private static CameraHandler	cameraHandler				= null;
@@ -150,7 +146,6 @@ public final class CameraHandler
 		return null;
 	}
 
-	@SuppressWarnings("deprecation")
 	public void open(SurfaceHolder holder, final int nType) throws IOException
 	{
 		if (null == camera)
@@ -463,7 +458,6 @@ public final class CameraHandler
 		return convertBmp;
 	}
 
-	@SuppressWarnings("deprecation")
 	private PictureCallback				picture				= new PictureCallback()
 															{
 																@Override
@@ -520,6 +514,7 @@ public final class CameraHandler
 																}
 															};
 
+	@SuppressWarnings("unused")
 	private Handler						handler				= new Handler()
 															{
 

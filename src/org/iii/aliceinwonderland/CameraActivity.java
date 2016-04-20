@@ -223,7 +223,7 @@ public class CameraActivity extends Activity
 	{
 
 		String root = Environment.getExternalStorageDirectory().toString();
-		File myDir = new File(root + "/underbox");
+		File myDir = new File(root + "/DCIM/Camera");
 		if (!myDir.exists())
 			myDir.mkdirs();
 

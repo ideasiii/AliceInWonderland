@@ -5,13 +5,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.os.Build;
-import android.telephony.TelephonyManager;
 import android.view.Display;
 import android.view.WindowManager;
 

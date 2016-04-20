@@ -1,21 +1,14 @@
 package org.iii.aliceinwonderland;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 
 import com.facebook.appevents.AppEventsLogger;
-import com.facebook.share.ShareApi;
-import com.facebook.share.model.ShareLinkContent;
-import com.facebook.share.model.SharePhoto;
-import com.facebook.share.model.SharePhotoContent;
-import com.facebook.share.widget.ShareDialog;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -54,8 +47,9 @@ public class MainActivity extends Activity
 	private final int			MSG_SHOW_CONTENT_SESSION4_END	= 33;
 	private final int			MSG_SHOW_SHARE_DIALOG			= 34;
 	private final int			MSG_SHOW_LOGIN					= 35;
+	private final int			MSG_SHOW_SHARE					= 36;
 	private final int			REQUEST_CODE_CAMERA				= 666;
-	private final String		BT_NAME							= "150737-R30A-IDS";							// "HC-05";
+	private final String		BT_NAME							= "HC-05";										// "150737-R30A-IDS"; // //
 
 	private ViewPagerHandler	pageHandler						= null;
 	private FlipperHandler		flipperHandler					= null;
@@ -81,6 +75,9 @@ public class MainActivity extends Activity
 	private Share				share							= null;
 	private BluetoothHandler	mBluetoothHandler				= null;
 	private boolean				mbBTEnable						= false;
+	private String				mstrTimeofPlay					= "00:00:00";
+	private String				mstrPicturePath					= null;
+	private Dialog				dialogLoading					= null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -105,7 +102,6 @@ public class MainActivity extends Activity
 	protected void onPause()
 	{
 		Logs.showTrace("onPause");
-		// mBluetoothHandler.stopListenAction();
 		super.onPause();
 		AppEventsLogger.deactivateApp(this);
 	}
@@ -114,7 +110,6 @@ public class MainActivity extends Activity
 	protected void onStop()
 	{
 		Logs.showTrace("onStop");
-
 		super.onStop();
 	}
 
@@ -122,21 +117,23 @@ public class MainActivity extends Activity
 	protected void onDestroy()
 	{
 		Logs.showTrace("onDestroy");
-		if (null != mBluetoothHandler)
-		{
-			mBluetoothHandler.stopListenAction();
-			mBluetoothHandler.setBluetooth(false);
-		}
-		else
-		{
-			Logs.showTrace("BT is null");
-		}
+		releaseBT();
 		super.onDestroy();
+		Logs.showTrace("System Exit");
+		android.os.Process.killProcess(android.os.Process.myPid());
+		// System.exit(0);
+
 	}
 
 	private void initBluetooth()
 	{
 		Logs.showTrace("initBluetooth........");
+		if (null != dialogLoading)
+		{
+			dialogLoading.dismiss();
+			dialogLoading = null;
+		}
+		dialogLoading = DialogHandler.showLoading(this);
 		mBluetoothHandler = new BluetoothHandler(this);
 		mBluetoothHandler.startListenAction();
 
@@ -156,7 +153,6 @@ public class MainActivity extends Activity
 
 					if (null != message.get("deviceName") && message.get("deviceName").equals(BT_NAME))
 					{
-						// mbBTEnable = true;
 						mBluetoothHandler.stopDiscovery();
 						Logs.showTrace("BT get " + BT_NAME);
 					}
@@ -164,25 +160,51 @@ public class MainActivity extends Activity
 				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_BOND_STATE_CHANGE_BLUETOOTH)
 				{
 					Logs.showTrace("METHOD_BOND_STATE_CHANGE_BLUETOOTH");
-					if (message.get("state").equals("BOND_NONE"))
+					if (null != message && null != message.get("state"))
 					{
-						Logs.showTrace("配對失敗");
-						mbBTEnable = false;
+						if (message.get("state").equals("BOND_NONE"))
+						{
+							Logs.showTrace("配對失敗");
+							mbBTEnable = false;
+							if (null != dialogLoading)
+							{
+								dialogLoading.dismiss();
+								dialogLoading = null;
+							}
+						}
+						else if (message.get("state").equals("BOND_BONDED"))
+						{
+							Logs.showTrace("配對成功");
+							mbBTEnable = true;
+							if (null != dialogLoading)
+							{
+								dialogLoading.dismiss();
+								dialogLoading = null;
+							}
+						}
 					}
-					else if (message.get("state").equals("BOND_BONDED"))
+					else
 					{
-						Logs.showTrace("配對成功");
-						mbBTEnable = true;
+						Logs.showTrace("BT message invalid");
+						if (null != dialogLoading)
+						{
+							dialogLoading.dismiss();
+							dialogLoading = null;
+						}
 					}
 
 				}
 				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.BLUETOOTH_IS_ON)
 				{
 					Logs.showTrace("BT start to request Discoverable");
-					mBluetoothHandler.requestBluetoothDiscoverable();
-
-					// mBluetoothHandler.requestBluetoothDiscoverable();
-
+					if (null != mBluetoothHandler)
+					{
+						mBluetoothHandler.requestBluetoothDiscoverable();
+					}
+					else
+					{
+						Logs.showError("requestBluetoothDiscoverable BT is null");
+					}
 				}
 				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_DISCOVERABLE_BLUETOOTH)
 				{
@@ -194,60 +216,18 @@ public class MainActivity extends Activity
 					mBluetoothHandler.connectDeviceByName(BT_NAME);
 
 				}
+				if (result == -26)
+				{
+					if (null != dialogLoading)
+					{
+						dialogLoading.dismiss();
+						dialogLoading = null;
+					}
+				}
 			}
 		});
 
 		mBluetoothHandler.setBluetooth(true);
-
-	}
-
-	private void sharePhotoToFacebook()
-	{
-		/*
-		 * Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher); SharePhoto photo = new SharePhoto.Builder().setBitmap(image) .setCaption(
-		 * "Give me my codez or I will ... you know, do that thing you don't like!" ).build(); SharePhotoContent content = new SharePhotoContent.Builder().addPhoto(photo).build();
-		 * ShareApi.share(content, null);
-		 */
-
-		Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.ending_bg);
-
-		SharePhoto photo = new SharePhoto.Builder().setBitmap(image).build();
-		SharePhotoContent sharePhotoContent = new SharePhotoContent.Builder().addPhoto(photo)
-				.setRef("Testing picture post").build();
-
-		ShareLinkContent shareLinkContent = new ShareLinkContent.Builder().setContentTitle("Your Title")
-				.setContentDescription("Your Description")
-				.setImageUrl(Uri
-						.parse("https://lh3.googleusercontent.com/5oh994t2XLUThXYZQgeH3lv7Zv0cAHh8qJPuK82tqES6oFDASv4j43D0Hsps84_IhjM=w300"))
-				.build();
-		// ShareDialog.show(MainActivity.this, sharePhotoContent);
-
-		if (ShareDialog.canShow(SharePhotoContent.class))
-		{
-			// SharePhotoContent content = new
-			// SharePhotoContent.Builder().setPhotos(photos).build();
-			Logs.showTrace("go##################################");
-			ShareDialog shareDialog = new ShareDialog(MainActivity.this);
-			shareDialog.show(sharePhotoContent);
-		}
-		else
-		{
-
-			SharePhoto sharePhoto = new SharePhoto.Builder().setBitmap(image).build(); // oR
-																						// SharePhoto
-																						// sharePhoto
-																						// =
-																						// new
-																						// SharePhoto.Builder().setImageUrl("path").build();
-			ArrayList<SharePhoto> photos = new ArrayList<SharePhoto>();
-
-			photos.add(sharePhoto);
-
-			// SharePhotoContent sharePhotoContent = new SharePhotoContent.Builder().setRef("Testing picture post").setPhotos(photos).build();
-
-			ShareApi.share(sharePhotoContent, null);
-			Logs.showTrace("go 222222222##################################");
-		}
 
 	}
 
@@ -261,18 +241,13 @@ public class MainActivity extends Activity
 			if (resultCode == RESULT_OK)
 			{
 				Bundle extras = data.getExtras();
+				mstrPicturePath = null;
 				if (extras != null)
 				{
-					Logs.showTrace("Camera picture path: " + extras.getString("picture"));
-					share = new Share(MainActivity.this);
-					SparseArray<String> listImagePath = new SparseArray<String>();
-					listImagePath.append(0, extras.getString("picture"));
-					share.shareAll("title", "strSubject", "strMessage", listImagePath);
-					listImagePath.clear();
-					listImagePath = null;
-					// showLayout(LAYOUT_HOME);
-					selfHandler.sendEmptyMessageDelayed(MSG_SHOW_HOME, 2000);
+					mstrPicturePath = extras.getString("picture");
+					Logs.showTrace("Camera picture path: " + mstrPicturePath);
 				}
+				selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE, 2000);
 			}
 		}
 		else
@@ -282,6 +257,35 @@ public class MainActivity extends Activity
 			{
 				mBluetoothHandler.onActivityResult(requestCode, resultCode, data);
 			}
+		}
+	}
+
+	private void closeBox()
+	{
+		if (null != mBluetoothHandler && mbBTEnable)
+		{
+			mBluetoothHandler.sendData("a");
+			mBluetoothHandler.sendData("c");
+			mBluetoothHandler.sendData("e");
+			mBluetoothHandler.sendData("g");
+			mBluetoothHandler.sendData("i");
+		}
+	}
+
+	private void releaseBT()
+	{
+		if (mbBTEnable && null != mBluetoothHandler)
+		{
+			mBluetoothHandler.closeBluetoothLink();
+		}
+
+		if (null != mBluetoothHandler)
+		{
+			mBluetoothHandler.stopListenAction();
+
+			mBluetoothHandler.setBluetooth(false);
+			mBluetoothHandler = null;
+			Logs.showTrace("Release BT");
 		}
 	}
 
@@ -300,6 +304,7 @@ public class MainActivity extends Activity
 		case LAYOUT_STORY:
 			setContentView(R.layout.intro);
 			initStoryGoBtn();
+			closeBox();
 			break;
 		case LAYOUT_MAIN:
 			setContentView(R.layout.activity_main);
@@ -535,12 +540,12 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (693 == nKey)
 							{
+								session1_e = System.currentTimeMillis();
 								if (mbBTEnable)
 								{
-									mBluetoothHandler.sendData("a");
+									mBluetoothHandler.sendData("b");
+									Logs.showTrace("Send b to BT");
 								}
-
-								session1_e = System.currentTimeMillis();
 								Logs.showTrace("Game Session1 end:" + String.valueOf(session1_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
@@ -627,6 +632,11 @@ public class MainActivity extends Activity
 							if (786 == nKey)
 							{
 								session2_e = System.currentTimeMillis();
+								if (mbBTEnable)
+								{
+									mBluetoothHandler.sendData("d");
+									Logs.showTrace("Send d to BT");
+								}
 								Logs.showTrace("Game Session2 end:" + String.valueOf(session2_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
@@ -713,6 +723,11 @@ public class MainActivity extends Activity
 							if (321 == nKey)
 							{
 								session3_e = System.currentTimeMillis();
+								if (mbBTEnable)
+								{
+									mBluetoothHandler.sendData("f");
+									Logs.showTrace("Send f to BT");
+								}
 								Logs.showTrace("Game Session3 end:" + String.valueOf(session3_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
@@ -800,6 +815,11 @@ public class MainActivity extends Activity
 							if (245 == nKey)
 							{
 								session4_e = System.currentTimeMillis();
+								if (mbBTEnable)
+								{
+									mBluetoothHandler.sendData("h");
+									Logs.showTrace("Send h to BT");
+								}
 								Logs.showTrace("Game Session4 end:" + String.valueOf(session4_e));
 								showEnding();
 							}
@@ -831,6 +851,8 @@ public class MainActivity extends Activity
 	{
 		Long ltotalTime = session4_e - session1_s;
 
+		releaseBT();
+
 		String strTime = formatTime(ltotalTime);
 
 		TextView tvTime = (TextView) pageHandler.getView(ViewPagerHandler.PAGE_ENDING)
@@ -839,14 +861,9 @@ public class MainActivity extends Activity
 		pageHandler.getView(ViewPagerHandler.PAGE_ENDING).findViewById(R.id.imageViewEndingShare)
 				.setOnClickListener(new OnClickListener()
 				{
-
 					@Override
 					public void onClick(View v)
 					{
-						// shareTo("facebook", "hi", "分享");
-						// sharePhotoToFacebook();
-						// share = new Share(MainActivity.this);
-						// share.shareAll("title", "strSubject", "strMessage", null);
 						showCamera();
 					}
 				});
@@ -865,19 +882,8 @@ public class MainActivity extends Activity
 		int seconds = (int) ((lMillsecond / 1000) % 60);
 		// 計算目前已過小時
 		int hourse = minius / 60;
-		String strTime = String.format("%02d:%02d:%02d", hourse, minius, seconds);
-		return strTime;
-	}
-
-	private void shareTo(String subject, String body, String chooserTitle)
-	{
-
-		Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-		sharingIntent.setType("text/plain");
-		sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
-		sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, body);
-
-		startActivity(Intent.createChooser(sharingIntent, chooserTitle));
+		mstrTimeofPlay = String.format(Locale.TAIWAN, "%02d:%02d:%02d", hourse, minius, seconds);
+		return mstrTimeofPlay;
 	}
 
 	private void clearKeyInput()
@@ -901,6 +907,26 @@ public class MainActivity extends Activity
 				vDialog.setVisibility(View.VISIBLE);
 			}
 		}
+	}
+
+	private void runShare()
+	{
+		share = new Share(MainActivity.this);
+		SparseArray<String> listImagePath = null;
+		if (null != mstrPicturePath)
+		{
+			listImagePath = new SparseArray<String>();
+			listImagePath.append(0, mstrPicturePath);
+		}
+		String strMsg = "愛麗絲夢遊仙境 – 地洞冒險(上) 遊戲完成時間：" + mstrTimeofPlay;
+		share.shareAll("愛麗絲夢遊仙境 – 地洞冒險(上)", "愛麗絲夢遊仙境 – 地洞冒險(上)", strMsg, listImagePath);
+
+		if (null != listImagePath)
+		{
+			listImagePath.clear();
+			listImagePath = null;
+		}
+		selfHandler.sendEmptyMessageDelayed(MSG_SHOW_HOME, 1000);
 	}
 
 	private Handler selfHandler = new Handler()
@@ -937,6 +963,9 @@ public class MainActivity extends Activity
 			case MSG.FB_LOGIN:
 				Logs.showTrace("Facebook Relogin");
 				facebook.login();
+				break;
+			case MSG_SHOW_SHARE:
+				runShare();
 				break;
 			}
 		}
@@ -979,7 +1008,6 @@ public class MainActivity extends Activity
 		{
 			public void onAnimationEnd(Animation animation)
 			{
-				// selfHandler.sendEmptyMessageDelayed(MSG_SHOW_HOME, 2000);
 				selfHandler.sendEmptyMessageDelayed(MSG_SHOW_LOGIN, 2000);
 			}
 
