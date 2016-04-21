@@ -36,4 +36,6 @@ public abstract class MSG
 	public static final int	MEMBER_FORGET_PASSWD	= ID + 30;
 	public static final int	FINISH					= ID + 31;
 	public static final int	FB_LOGIN				= ID + 32;
+	public static final int	REQUEST_CODE_CAMERA		= ID + 33;
+	public static final int	REQUEST_CODE_SHARE		= ID + 34;
 }

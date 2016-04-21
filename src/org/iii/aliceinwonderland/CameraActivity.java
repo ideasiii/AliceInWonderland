@@ -227,7 +227,8 @@ public class CameraActivity extends Activity
 		if (!myDir.exists())
 			myDir.mkdirs();
 
-		File file = new File(myDir, "alice.jpg");
+		String strFileName = "alice_" + String.valueOf(System.currentTimeMillis()) + ".jpg";
+		File file = new File(myDir, strFileName);
 		if (file.exists())
 			file.delete();
 		try

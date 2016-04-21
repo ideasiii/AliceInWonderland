@@ -53,7 +53,7 @@
         android:background="@drawable/style_button"
         android:contentDescription="@string/content_description"
         android:scaleType="centerInside"
-        android:src="@drawable/btn_pic" />
+        android:src="@drawable/camera" />
 
     <TextView
         android:id="@+id/textViewShareDialog"

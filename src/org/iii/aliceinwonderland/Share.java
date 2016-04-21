@@ -47,7 +47,8 @@ public class Share
 			intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, getUriListForImages(listImagePath));
 		}
 
-		theActivity.startActivity(Intent.createChooser(intent, "分享到"));
+		// theActivity.startActivity(Intent.createChooser(intent, "分享到"));
+		theActivity.startActivityForResult(Intent.createChooser(intent, "分享到"), MSG.REQUEST_CODE_SHARE);
 	}
 
 	private ArrayList<Uri> getUriListForImages(SparseArray<String> listImagePath)

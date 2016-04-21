@@ -1,5 +1,6 @@
 package org.iii.aliceinwonderland;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -9,6 +10,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -48,8 +51,9 @@ public class MainActivity extends Activity
 	private final int			MSG_SHOW_SHARE_DIALOG			= 34;
 	private final int			MSG_SHOW_LOGIN					= 35;
 	private final int			MSG_SHOW_SHARE					= 36;
-	private final int			REQUEST_CODE_CAMERA				= 666;
-	private final String		BT_NAME							= "HC-05";										// "150737-R30A-IDS"; // //
+	private final int			MSG_SHOW_GAMEOVER				= 37;
+
+	private final String		BT_NAME							= "HC-05";
 
 	private ViewPagerHandler	pageHandler						= null;
 	private FlipperHandler		flipperHandler					= null;
@@ -78,6 +82,7 @@ public class MainActivity extends Activity
 	private String				mstrTimeofPlay					= "00:00:00";
 	private String				mstrPicturePath					= null;
 	private Dialog				dialogLoading					= null;
+	private MediaHandler		media							= null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -88,12 +93,14 @@ public class MainActivity extends Activity
 		Global.mainHandler = selfHandler;
 		showLayout(LAYOUT_WELCOME);
 		Logs.showTrace("Alice on Create");
+		media = new MediaHandler(this);
 	}
 
 	@Override
 	protected void onResume()
 	{
 		Logs.showTrace("onResume");
+		media.start();
 		super.onResume();
 		AppEventsLogger.activateApp(this);
 	}
@@ -110,6 +117,7 @@ public class MainActivity extends Activity
 	protected void onStop()
 	{
 		Logs.showTrace("onStop");
+		media.pause();
 		super.onStop();
 	}
 
@@ -118,16 +126,16 @@ public class MainActivity extends Activity
 	{
 		Logs.showTrace("onDestroy");
 		releaseBT();
+		media.releasePlayer();
+		Global.theApplication.Terminate();
 		super.onDestroy();
-		Logs.showTrace("System Exit");
-		android.os.Process.killProcess(android.os.Process.myPid());
-		// System.exit(0);
-
 	}
 
 	private void initBluetooth()
 	{
 		Logs.showTrace("initBluetooth........");
+		mbBTEnable = false;
+
 		if (null != dialogLoading)
 		{
 			dialogLoading.dismiss();
@@ -139,6 +147,7 @@ public class MainActivity extends Activity
 
 		mBluetoothHandler.setOnCallbackResultListener(new OnCallbackResult()
 		{
+			boolean bFindBT = false;
 
 			@Override
 			public void onCallbackResult(final int result, final int what, final int from,
@@ -148,81 +157,110 @@ public class MainActivity extends Activity
 				Logs.showTrace("bluetooth lisetener Result: " + String.valueOf(result) + " What: "
 						+ String.valueOf(what) + " From: " + String.valueOf(from) + " Message: " + message);
 
-				if (from == ResponseCode.METHOD_BLUETOOTH_DISCOVERING_NEW_DEVICE)
+				if (ResponseCode.ERR_SUCCESS == result)
 				{
-
-					if (null != message.get("deviceName") && message.get("deviceName").equals(BT_NAME))
+					switch(from)
 					{
-						mBluetoothHandler.stopDiscovery();
-						Logs.showTrace("BT get " + BT_NAME);
-					}
-				}
-				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_BOND_STATE_CHANGE_BLUETOOTH)
-				{
-					Logs.showTrace("METHOD_BOND_STATE_CHANGE_BLUETOOTH");
-					if (null != message && null != message.get("state"))
-					{
-						if (message.get("state").equals("BOND_NONE"))
+					case ResponseCode.METHOD_BLUETOOTH_DISCOVERING_NEW_DEVICE:
+						if (null != message.get("deviceName") && message.get("deviceName").equals(BT_NAME))
 						{
-							Logs.showTrace("配對失敗");
-							mbBTEnable = false;
+							bFindBT = true;
+							mBluetoothHandler.stopDiscovery();
+							Logs.showTrace("BT get " + BT_NAME);
+						}
+						break;
+					case ResponseCode.METHOD_BOND_STATE_CHANGE_BLUETOOTH:
+						Logs.showTrace("METHOD_BOND_STATE_CHANGE_BLUETOOTH");
+						if (null != message && null != message.get("state"))
+						{
+							if (message.get("state").equals("BOND_BONDED"))
+							{
+								Logs.showTrace("配對成功");
+								mbBTEnable = true;
+								if (null != dialogLoading)
+								{
+									dialogLoading.dismiss();
+									dialogLoading = null;
+								}
+							}
+							else if (message.get("state").equals("BOND_NONE"))
+							{
+								if (null != dialogLoading)
+								{
+									dialogLoading.dismiss();
+									dialogLoading = null;
+								}
+								DialogHandler.showAlert(MainActivity.this, "藍芽通訊配對失敗", false);
+							}
+						}
+						else
+						{
+							Logs.showTrace("BT message invalid");
 							if (null != dialogLoading)
 							{
 								dialogLoading.dismiss();
 								dialogLoading = null;
 							}
+							DialogHandler.showAlert(MainActivity.this, "藍芽通訊配對失敗", false);
 						}
-						else if (message.get("state").equals("BOND_BONDED"))
+						break;
+					case ResponseCode.BLUETOOTH_IS_ON:
+						Logs.showTrace("BT is ON then Request Discoverable");
+						if (null != mBluetoothHandler)
 						{
-							Logs.showTrace("配對成功");
-							mbBTEnable = true;
+							mBluetoothHandler.requestBluetoothDiscoverable();
+						}
+						else
+						{
+							Logs.showError("requestBluetoothDiscoverable BT is null");
 							if (null != dialogLoading)
 							{
 								dialogLoading.dismiss();
 								dialogLoading = null;
 							}
+							DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
 						}
-					}
-					else
-					{
-						Logs.showTrace("BT message invalid");
-						if (null != dialogLoading)
+						break;
+					case ResponseCode.METHOD_DISCOVERABLE_BLUETOOTH:
+						Logs.showTrace("BT start to discover");
+						mBluetoothHandler.startDiscovery();
+						break;
+					case ResponseCode.METHOD_BLUETOOTH_DISCOVER_FINISHED:
+						if (bFindBT)
+							mBluetoothHandler.connectDeviceByName(BT_NAME);
+						else
 						{
-							dialogLoading.dismiss();
-							dialogLoading = null;
+							Logs.showError("METHOD_BLUETOOTH_DISCOVER_FINISHED invalid");
+							if (null != dialogLoading)
+							{
+								dialogLoading.dismiss();
+								dialogLoading = null;
+							}
+							DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
 						}
+						break;
 					}
+				}
 
-				}
-				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.BLUETOOTH_IS_ON)
+				if (ResponseCode.ERR_IO_EXCEPTION == result && from == ResponseCode.METHOD_BLUETOOTH_CONNECTED)
 				{
-					Logs.showTrace("BT start to request Discoverable");
-					if (null != mBluetoothHandler)
+					Logs.showTrace("BT IO Exception");
+					if (null != dialogLoading)
 					{
-						mBluetoothHandler.requestBluetoothDiscoverable();
+						dialogLoading.dismiss();
+						dialogLoading = null;
 					}
-					else
-					{
-						Logs.showError("requestBluetoothDiscoverable BT is null");
-					}
+					DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
 				}
-				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_DISCOVERABLE_BLUETOOTH)
-				{
-					Logs.showTrace("BT start to discover");
-					mBluetoothHandler.startDiscovery();
-				}
-				if (result == ResponseCode.ERR_SUCCESS && from == ResponseCode.METHOD_BLUETOOTH_DISCOVER_FINISHED)
-				{
-					mBluetoothHandler.connectDeviceByName(BT_NAME);
 
-				}
-				if (result == -26)
+				if (ResponseCode.ERR_BLUETOOTH_CANCELLED_BY_USER == result)
 				{
 					if (null != dialogLoading)
 					{
 						dialogLoading.dismiss();
 						dialogLoading = null;
 					}
+					DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗", false);
 				}
 			}
 		});
@@ -234,8 +272,10 @@ public class MainActivity extends Activity
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
+		Logs.showTrace("onActivityResult: requestCode=" + String.valueOf(requestCode) + " resultCode="
+				+ String.valueOf(resultCode));
 		super.onActivityResult(requestCode, resultCode, data);
-		if (REQUEST_CODE_CAMERA == requestCode)
+		if (MSG.REQUEST_CODE_CAMERA == requestCode)
 		{
 			Logs.showTrace("Camera Activity Finish and Call Result");
 			if (resultCode == RESULT_OK)
@@ -247,8 +287,24 @@ public class MainActivity extends Activity
 					mstrPicturePath = extras.getString("picture");
 					Logs.showTrace("Camera picture path: " + mstrPicturePath);
 				}
-				selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE, 2000);
+
+				if (null != dialogLoading)
+				{
+					dialogLoading.dismiss();
+					dialogLoading = null;
+				}
+				dialogLoading = DialogHandler.showLoading(this);
+				selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE, 5000);
 			}
+			else
+			{
+				showGameover();
+			}
+
+		}
+		else if (MSG.REQUEST_CODE_SHARE == requestCode)
+		{
+			selfHandler.sendEmptyMessageDelayed(MSG_SHOW_GAMEOVER, 500);
 		}
 		else
 		{
@@ -372,6 +428,7 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
+				media.play();
 				showLayout(LAYOUT_STORY);
 			}
 		});
@@ -870,7 +927,7 @@ public class MainActivity extends Activity
 
 		flipperHandler.close();
 		pageHandler.showPage(ViewPagerHandler.PAGE_ENDING);
-		selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE_DIALOG, 3000);
+		selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE_DIALOG, 2000);
 
 	}
 
@@ -911,6 +968,12 @@ public class MainActivity extends Activity
 
 	private void runShare()
 	{
+		if (null != dialogLoading)
+		{
+			dialogLoading.dismiss();
+			dialogLoading = null;
+		}
+
 		share = new Share(MainActivity.this);
 		SparseArray<String> listImagePath = null;
 		if (null != mstrPicturePath)
@@ -926,7 +989,6 @@ public class MainActivity extends Activity
 			listImagePath.clear();
 			listImagePath = null;
 		}
-		selfHandler.sendEmptyMessageDelayed(MSG_SHOW_HOME, 1000);
 	}
 
 	private Handler selfHandler = new Handler()
@@ -967,10 +1029,38 @@ public class MainActivity extends Activity
 			case MSG_SHOW_SHARE:
 				runShare();
 				break;
+			case MSG_SHOW_GAMEOVER:
+				showGameover();
+				break;
 			}
 		}
 
 	};
+
+	private void showGameover()
+	{
+		this.setContentView(R.layout.gameover);
+		this.findViewById(R.id.buttonGameoverExit).setOnClickListener(new OnClickListener()
+		{
+
+			@Override
+			public void onClick(View v)
+			{
+				finish();
+				System.exit(0);
+			}
+		});
+		if (null != mstrPicturePath)
+		{
+			File imgFile = new File(mstrPicturePath);
+			if (imgFile.exists())
+			{
+				Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+				ImageView imgPic = (ImageView) this.findViewById(R.id.imageViewGameoverPic);
+				imgPic.setImageBitmap(myBitmap);
+			}
+		}
+	}
 
 	private void fadeOutAndHideImage(final ImageView img)
 	{
@@ -1068,9 +1158,11 @@ public class MainActivity extends Activity
 
 	private void showCamera()
 	{
+		this.setContentView(R.layout.welcome);
+		mstrPicturePath = null;
 		Intent openCameraIntent = new Intent(MainActivity.this, CameraActivity.class);
 		openCameraIntent.putExtra("time", "00:00:00");
-		startActivityForResult(openCameraIntent, REQUEST_CODE_CAMERA);
+		startActivityForResult(openCameraIntent, MSG.REQUEST_CODE_CAMERA);
 	}
 
 }
