@@ -56,7 +56,6 @@
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="80dp"
             android:layout_height="51dip"
-            android:layout_marginLeft="20dp"
             android:layout_marginStart="20dp"
             android:background="@drawable/button_style"
             android:text="@string/cancel"

@@ -23,6 +23,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 @SuppressWarnings("deprecation")
 public class CameraActivity extends Activity
@@ -56,6 +57,9 @@ public class CameraActivity extends Activity
 			});
 		}
 
+		Bundle b = this.getIntent().getExtras();
+		TextView tvFinishTime = (TextView) this.findViewById(R.id.textViewCameraFinishTime);
+		tvFinishTime.setText("闖關時間：" + b.getString("time"));
 	}
 
 	@Override
@@ -210,11 +214,21 @@ public class CameraActivity extends Activity
 		{
 			Bitmap bmPhoto = convertBmp(BitmapFactory.decodeByteArray(data, 0, data.length));
 			Bitmap bmRabbit = BitmapFactory.decodeResource(getResources(), R.drawable.camera_rabbit2);
+
+			View vTimeBar = CameraActivity.this.findViewById(R.id.linearLayoutBarUnderbox);
+			Bitmap bmTimeBar = Bitmap.createBitmap(vTimeBar.getWidth(), vTimeBar.getHeight(), Bitmap.Config.ARGB_8888);
+			Canvas c = new Canvas(bmTimeBar);
+			vTimeBar.draw(c);
+
 			Bitmap bmCombine = combineBitmap(bmPhoto, bmRabbit);
-			SaveImage(bmCombine);
+			Bitmap bmCombine2 = combineBarBitmap(bmCombine, bmTimeBar);
+
+			SaveImage(bmCombine2);
 			bmCombine.recycle();
 			bmRabbit.recycle();
 			bmPhoto.recycle();
+			bmTimeBar.recycle();
+			bmCombine2.recycle();
 			close();
 		}
 	};
@@ -306,6 +320,24 @@ public class CameraActivity extends Activity
 		Canvas canvas = new Canvas(newmap);
 		canvas.drawBitmap(background, 0, 0, null);
 		canvas.drawBitmap(foreground, (bgWidth - fgWidth), (bgHeight - fgHeight), null);
+		canvas.save(Canvas.ALL_SAVE_FLAG);
+		canvas.restore();
+		return newmap;
+	}
+
+	public static Bitmap combineBarBitmap(Bitmap background, Bitmap foreground)
+	{
+		if (background == null)
+		{
+			return null;
+		}
+		int bgWidth = background.getWidth();
+		int bgHeight = background.getHeight();
+		int fgHeight = foreground.getHeight();
+		Bitmap newmap = Bitmap.createBitmap(bgWidth, bgHeight, Config.ARGB_8888);
+		Canvas canvas = new Canvas(newmap);
+		canvas.drawBitmap(background, 0, 0, null);
+		canvas.drawBitmap(foreground, 5, (bgHeight - fgHeight) - 5, null);
 		canvas.save(Canvas.ALL_SAVE_FLAG);
 		canvas.restore();
 		return newmap;

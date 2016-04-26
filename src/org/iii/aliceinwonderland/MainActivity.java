@@ -1,7 +1,6 @@
 package org.iii.aliceinwonderland;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Locale;
 
 import com.facebook.appevents.AppEventsLogger;
@@ -29,9 +28,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import sdk.ideas.common.OnCallbackResult;
-import sdk.ideas.common.ResponseCode;
-import sdk.ideas.ctrl.bluetooth.BluetoothHandler;
 
 public class MainActivity extends Activity
 {
@@ -52,8 +48,6 @@ public class MainActivity extends Activity
 	private final int			MSG_SHOW_LOGIN					= 35;
 	private final int			MSG_SHOW_SHARE					= 36;
 	private final int			MSG_SHOW_GAMEOVER				= 37;
-
-	private final String		BT_NAME							= "HC-05";
 
 	private ViewPagerHandler	pageHandler						= null;
 	private FlipperHandler		flipperHandler					= null;
@@ -77,12 +71,29 @@ public class MainActivity extends Activity
 	private Long				session4_s						= 0L;
 	private Long				session4_e						= 0L;
 	private Share				share							= null;
-	private BluetoothHandler	mBluetoothHandler				= null;
-	private boolean				mbBTEnable						= false;
 	private String				mstrTimeofPlay					= "00:00:00";
-	private String				mstrPicturePath					= null;
+	private static String		mstrPicturePath					= null;
 	private Dialog				dialogLoading					= null;
 	private MediaHandler		media							= null;
+	private static boolean		mbMute							= false;
+
+	private class InputLayout
+	{
+		public int	mnBackground	= 0;
+		public int	mnInput			= 0;
+		public int	mnSuccess		= 0;
+		public int	mnFail			= 0;
+
+		public InputLayout(final int nBackground, final int nInput, final int nSuccess, final int nFail)
+		{
+			mnBackground = nBackground;
+			mnInput = nInput;
+			mnSuccess = nSuccess;
+			mnFail = nFail;
+		}
+	}
+
+	private SparseArray<InputLayout> listInputLayout = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -94,13 +105,15 @@ public class MainActivity extends Activity
 		showLayout(LAYOUT_WELCOME);
 		Logs.showTrace("Alice on Create");
 		media = new MediaHandler(this);
+		initInputLayout();
 	}
 
 	@Override
 	protected void onResume()
 	{
 		Logs.showTrace("onResume");
-		media.start();
+		if (!mbMute)
+			media.start();
 		super.onResume();
 		AppEventsLogger.activateApp(this);
 	}
@@ -117,7 +130,8 @@ public class MainActivity extends Activity
 	protected void onStop()
 	{
 		Logs.showTrace("onStop");
-		media.pause();
+		if (!mbMute)
+			media.pause();
 		super.onStop();
 	}
 
@@ -125,148 +139,10 @@ public class MainActivity extends Activity
 	protected void onDestroy()
 	{
 		Logs.showTrace("onDestroy");
-		releaseBT();
+		Global.theApplication.btRelease();
 		media.releasePlayer();
 		Global.theApplication.Terminate();
 		super.onDestroy();
-	}
-
-	private void initBluetooth()
-	{
-		Logs.showTrace("initBluetooth........");
-		mbBTEnable = false;
-
-		if (null != dialogLoading)
-		{
-			dialogLoading.dismiss();
-			dialogLoading = null;
-		}
-		dialogLoading = DialogHandler.showLoading(this);
-		mBluetoothHandler = new BluetoothHandler(this);
-		mBluetoothHandler.startListenAction();
-
-		mBluetoothHandler.setOnCallbackResultListener(new OnCallbackResult()
-		{
-			boolean bFindBT = false;
-
-			@Override
-			public void onCallbackResult(final int result, final int what, final int from,
-					final HashMap<String, String> message)
-			{
-
-				Logs.showTrace("bluetooth lisetener Result: " + String.valueOf(result) + " What: "
-						+ String.valueOf(what) + " From: " + String.valueOf(from) + " Message: " + message);
-
-				if (ResponseCode.ERR_SUCCESS == result)
-				{
-					switch(from)
-					{
-					case ResponseCode.METHOD_BLUETOOTH_DISCOVERING_NEW_DEVICE:
-						if (null != message.get("deviceName") && message.get("deviceName").equals(BT_NAME))
-						{
-							bFindBT = true;
-							mBluetoothHandler.stopDiscovery();
-							Logs.showTrace("BT get " + BT_NAME);
-						}
-						break;
-					case ResponseCode.METHOD_BOND_STATE_CHANGE_BLUETOOTH:
-						Logs.showTrace("METHOD_BOND_STATE_CHANGE_BLUETOOTH");
-						if (null != message && null != message.get("state"))
-						{
-							if (message.get("state").equals("BOND_BONDED"))
-							{
-								Logs.showTrace("配對成功");
-								mbBTEnable = true;
-								if (null != dialogLoading)
-								{
-									dialogLoading.dismiss();
-									dialogLoading = null;
-								}
-							}
-							else if (message.get("state").equals("BOND_NONE"))
-							{
-								if (null != dialogLoading)
-								{
-									dialogLoading.dismiss();
-									dialogLoading = null;
-								}
-								DialogHandler.showAlert(MainActivity.this, "藍芽通訊配對失敗", false);
-							}
-						}
-						else
-						{
-							Logs.showTrace("BT message invalid");
-							if (null != dialogLoading)
-							{
-								dialogLoading.dismiss();
-								dialogLoading = null;
-							}
-							DialogHandler.showAlert(MainActivity.this, "藍芽通訊配對失敗", false);
-						}
-						break;
-					case ResponseCode.BLUETOOTH_IS_ON:
-						Logs.showTrace("BT is ON then Request Discoverable");
-						if (null != mBluetoothHandler)
-						{
-							mBluetoothHandler.requestBluetoothDiscoverable();
-						}
-						else
-						{
-							Logs.showError("requestBluetoothDiscoverable BT is null");
-							if (null != dialogLoading)
-							{
-								dialogLoading.dismiss();
-								dialogLoading = null;
-							}
-							DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
-						}
-						break;
-					case ResponseCode.METHOD_DISCOVERABLE_BLUETOOTH:
-						Logs.showTrace("BT start to discover");
-						mBluetoothHandler.startDiscovery();
-						break;
-					case ResponseCode.METHOD_BLUETOOTH_DISCOVER_FINISHED:
-						if (bFindBT)
-							mBluetoothHandler.connectDeviceByName(BT_NAME);
-						else
-						{
-							Logs.showError("METHOD_BLUETOOTH_DISCOVER_FINISHED invalid");
-							if (null != dialogLoading)
-							{
-								dialogLoading.dismiss();
-								dialogLoading = null;
-							}
-							DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
-						}
-						break;
-					}
-				}
-
-				if (ResponseCode.ERR_IO_EXCEPTION == result && from == ResponseCode.METHOD_BLUETOOTH_CONNECTED)
-				{
-					Logs.showTrace("BT IO Exception");
-					if (null != dialogLoading)
-					{
-						dialogLoading.dismiss();
-						dialogLoading = null;
-					}
-					DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
-				}
-
-				if (ResponseCode.ERR_BLUETOOTH_CANCELLED_BY_USER == result)
-				{
-					if (null != dialogLoading)
-					{
-						dialogLoading.dismiss();
-						dialogLoading = null;
-					}
-					DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗", false);
-				}
-			}
-		});
-
-		mBluetoothHandler.setBluetooth(true);
-
 	}
 
 	@Override
@@ -309,40 +185,31 @@ public class MainActivity extends Activity
 		else
 		{
 			FacebookHandler.callbackManager.onActivityResult(requestCode, resultCode, data);
-			if (null != mBluetoothHandler)
-			{
-				mBluetoothHandler.onActivityResult(requestCode, resultCode, data);
-			}
+			BlueToothHandler.onActivityResult(requestCode, resultCode, data);
 		}
+	}
+
+	private void initInputLayout()
+	{
+		listInputLayout = new SparseArray<InputLayout>();
+		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_1, R.drawable.input1_1,
+				R.drawable.success1_1, R.drawable.fail1_1));
+		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_2, R.drawable.input1_2,
+				R.drawable.success1_2, R.drawable.fail1_2));
+		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_3, R.drawable.input1_3,
+				R.drawable.success1_3, R.drawable.fail1_3));
+		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_4, R.drawable.input1_4,
+				R.drawable.success1_4, R.drawable.fail1_4));
+
 	}
 
 	private void closeBox()
 	{
-		if (null != mBluetoothHandler && mbBTEnable)
-		{
-			mBluetoothHandler.sendData("a");
-			mBluetoothHandler.sendData("c");
-			mBluetoothHandler.sendData("e");
-			mBluetoothHandler.sendData("g");
-			mBluetoothHandler.sendData("i");
-		}
-	}
-
-	private void releaseBT()
-	{
-		if (mbBTEnable && null != mBluetoothHandler)
-		{
-			mBluetoothHandler.closeBluetoothLink();
-		}
-
-		if (null != mBluetoothHandler)
-		{
-			mBluetoothHandler.stopListenAction();
-
-			mBluetoothHandler.setBluetooth(false);
-			mBluetoothHandler = null;
-			Logs.showTrace("Release BT");
-		}
+		Global.theApplication.btSend("a");
+		Global.theApplication.btSend("c");
+		Global.theApplication.btSend("e");
+		Global.theApplication.btSend("g");
+		Global.theApplication.btSend("i");
 	}
 
 	private void showLayout(final int nLayout)
@@ -354,6 +221,9 @@ public class MainActivity extends Activity
 			logoShow();
 			break;
 		case LAYOUT_HOME:
+			Logs.showTrace("initBluetooth........");
+			dialogLoading = DialogHandler.showLoading(this);
+			Global.theApplication.initBlueTooth(this, selfHandler);
 			setContentView(R.layout.home);
 			initHomeStartBtn();
 			break;
@@ -396,7 +266,6 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				initBluetooth();
 				showLayout(LAYOUT_HOME);
 			}
 		});
@@ -412,7 +281,6 @@ public class MainActivity extends Activity
 			@Override
 			public void onLoginResult(String strFBID, String strName, String strEmail, String strError)
 			{
-				initBluetooth();
 				showLayout(LAYOUT_HOME);
 				Logs.showTrace("Login Facebook: " + strFBID + " " + strName + " " + strEmail + " " + strError);
 				Logs.showTrace("Facebook token: " + facebook.getToken());
@@ -423,15 +291,38 @@ public class MainActivity extends Activity
 
 	private void initHomeStartBtn()
 	{
+		media.play();
 		this.findViewById(R.id.buttonHomeStart).setOnClickListener(new OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
-				media.play();
 				showLayout(LAYOUT_STORY);
 			}
 		});
+
+		this.findViewById(R.id.imageViewHomeMute).setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				switchMute();
+			}
+		});
+	}
+
+	private void switchMute()
+	{
+		if (mbMute)
+		{
+			mbMute = false;
+			media.play();
+		}
+		else
+		{
+			mbMute = true;
+			media.stop();
+		}
 	}
 
 	private void initStoryGoBtn()
@@ -558,6 +449,20 @@ public class MainActivity extends Activity
 		this.selfHandler = selfHandler;
 	}
 
+	private void setInputLayout(final int nSession)
+	{
+		if (null == viewKeyInput)
+			return;
+		viewKeyInput.findViewById(R.id.linearLayoutPasswordMain)
+				.setBackgroundResource(listInputLayout.get(nSession).mnBackground);
+		viewKeyInput.findViewById(R.id.editTextKey1).setBackgroundResource(listInputLayout.get(nSession).mnInput);
+		viewKeyInput.findViewById(R.id.editTextKey2).setBackgroundResource(listInputLayout.get(nSession).mnInput);
+		viewKeyInput.findViewById(R.id.editTextKey3).setBackgroundResource(listInputLayout.get(nSession).mnInput);
+		flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).setBackgroundResource(listInputLayout.get(nSession).mnFail);
+		flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS)
+				.setBackgroundResource(listInputLayout.get(nSession).mnSuccess);
+	}
+
 	private void initSession1()
 	{
 		viewSession1.findViewById(R.id.buttonSession1Key).setVisibility(View.VISIBLE);
@@ -566,10 +471,7 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
-				vTitle.setText(MainActivity.this.getString(R.string.session1_title1));
-				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
-				vTitle.setText(MainActivity.this.getString(R.string.session1_title2));
+				setInputLayout(0);
 				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
 				{
 					@Override
@@ -598,11 +500,8 @@ public class MainActivity extends Activity
 							if (693 == nKey)
 							{
 								session1_e = System.currentTimeMillis();
-								if (mbBTEnable)
-								{
-									mBluetoothHandler.sendData("b");
-									Logs.showTrace("Send b to BT");
-								}
+								Global.theApplication.btSend("b");
+
 								Logs.showTrace("Game Session1 end:" + String.valueOf(session1_e));
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
@@ -653,12 +552,10 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
-				vTitle.setText(MainActivity.this.getString(R.string.session2_title1));
-				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
-				vTitle.setText(MainActivity.this.getString(R.string.session2_title2));
+				setInputLayout(1);
 				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
 				{
+
 					@Override
 					public void onClick(View v)
 					{
@@ -672,6 +569,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
+
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -689,12 +587,10 @@ public class MainActivity extends Activity
 							if (786 == nKey)
 							{
 								session2_e = System.currentTimeMillis();
-								if (mbBTEnable)
-								{
-									mBluetoothHandler.sendData("d");
-									Logs.showTrace("Send d to BT");
-								}
+								Global.theApplication.btSend("d");
+
 								Logs.showTrace("Game Session2 end:" + String.valueOf(session2_e));
+
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
 										.setOnClickListener(new OnClickListener()
@@ -744,10 +640,7 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
-				vTitle.setText(MainActivity.this.getString(R.string.session3_title1));
-				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
-				vTitle.setText(MainActivity.this.getString(R.string.session3_title2));
+				setInputLayout(2);
 				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
 				{
 					@Override
@@ -780,12 +673,10 @@ public class MainActivity extends Activity
 							if (321 == nKey)
 							{
 								session3_e = System.currentTimeMillis();
-								if (mbBTEnable)
-								{
-									mBluetoothHandler.sendData("f");
-									Logs.showTrace("Send f to BT");
-								}
+								Global.theApplication.btSend("f");
+
 								Logs.showTrace("Game Session3 end:" + String.valueOf(session3_e));
+
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
 										.setOnClickListener(new OnClickListener()
@@ -836,10 +727,7 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				TextView vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle1);
-				vTitle.setText(MainActivity.this.getString(R.string.session4_title1));
-				vTitle = (TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle2);
-				vTitle.setText(MainActivity.this.getString(R.string.session4_title2));
+				setInputLayout(3);
 				viewKeyInput.findViewById(R.id.imageButtonKeyInput).setOnClickListener(new OnClickListener()
 				{
 					@Override
@@ -855,6 +743,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
+
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -872,11 +761,8 @@ public class MainActivity extends Activity
 							if (245 == nKey)
 							{
 								session4_e = System.currentTimeMillis();
-								if (mbBTEnable)
-								{
-									mBluetoothHandler.sendData("h");
-									Logs.showTrace("Send h to BT");
-								}
+								Global.theApplication.btSend("h");
+
 								Logs.showTrace("Game Session4 end:" + String.valueOf(session4_e));
 								showEnding();
 							}
@@ -907,8 +793,7 @@ public class MainActivity extends Activity
 	private void showEnding()
 	{
 		Long ltotalTime = session4_e - session1_s;
-
-		releaseBT();
+		Global.theApplication.btRelease();
 
 		String strTime = formatTime(ltotalTime);
 
@@ -1032,17 +917,43 @@ public class MainActivity extends Activity
 			case MSG_SHOW_GAMEOVER:
 				showGameover();
 				break;
+			case MSG.CALLBACK_BT:
+				btCallback(msg.arg1);
+				break;
 			}
 		}
 
 	};
+
+	private void btCallback(final int nState)
+	{
+		switch(nState)
+		{
+		case BlueToothHandler.BOND_BONDED:
+		case BlueToothHandler.CANCEL_BY_USER:
+			if (null != dialogLoading)
+			{
+				dialogLoading.dismiss();
+				dialogLoading = null;
+			}
+			break;
+		case BlueToothHandler.BOND_NONE:
+			if (null != dialogLoading)
+			{
+				dialogLoading.dismiss();
+				dialogLoading = null;
+			}
+			DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
+			break;
+
+		}
+	}
 
 	private void showGameover()
 	{
 		this.setContentView(R.layout.gameover);
 		this.findViewById(R.id.buttonGameoverExit).setOnClickListener(new OnClickListener()
 		{
-
 			@Override
 			public void onClick(View v)
 			{
@@ -1050,11 +961,14 @@ public class MainActivity extends Activity
 				System.exit(0);
 			}
 		});
+
+		Logs.showTrace("Show Game Over: photo: " + mstrPicturePath);
 		if (null != mstrPicturePath)
 		{
 			File imgFile = new File(mstrPicturePath);
 			if (imgFile.exists())
 			{
+				Logs.showTrace("Show photo on gameover");
 				Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
 				ImageView imgPic = (ImageView) this.findViewById(R.id.imageViewGameoverPic);
 				imgPic.setImageBitmap(myBitmap);
@@ -1085,7 +999,8 @@ public class MainActivity extends Activity
 			}
 		});
 
-		img.startAnimation(fadeOut);
+		if (null != img)
+			img.startAnimation(fadeOut);
 	}
 
 	private void fadeInAndShowImage(final ImageView img)
@@ -1158,11 +1073,10 @@ public class MainActivity extends Activity
 
 	private void showCamera()
 	{
-		this.setContentView(R.layout.welcome);
-		mstrPicturePath = null;
 		Intent openCameraIntent = new Intent(MainActivity.this, CameraActivity.class);
-		openCameraIntent.putExtra("time", "00:00:00");
+		openCameraIntent.putExtra("time", mstrTimeofPlay);
 		startActivityForResult(openCameraIntent, MSG.REQUEST_CODE_CAMERA);
+		// this.setContentView(R.layout.welcome);
 	}
 
 }

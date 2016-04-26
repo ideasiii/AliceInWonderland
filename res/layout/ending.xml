@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/ending_bg" >
+    android:background="@drawable/pass" >
 
     <LinearLayout
         android:id="@+id/linearLayoutEndingHead"
@@ -18,42 +18,20 @@
             android:layout_height="wrap_content"
             android:text="@string/clock"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@android:color/holo_blue_dark"
+            android:textColor="@android:color/white"
             android:textSize="48sp" />
-
-        <TextView
-            android:id="@+id/textViewEndingTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/ending_title"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@android:color/holo_orange_dark"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <ImageView
-            android:id="@+id/imageViewEndingRabbit"
-            android:layout_width="150dp"
-            android:layout_height="200dp"
-            android:layout_marginTop="20dp"
-            android:contentDescription="@string/content_description"
-            android:scaleType="fitXY"
-            android:src="@drawable/rabbit"
-            android:visibility="invisible" />
-
     </LinearLayout>
 
     <ImageView
         android:id="@+id/imageViewEndingShare"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="30dp"
-        android:background="@drawable/style_button"
         android:contentDescription="@string/content_description"
         android:scaleType="centerInside"
-        android:src="@drawable/camera" />
+        android:src="@drawable/camera2" />
 
     <TextView
         android:id="@+id/textViewShareDialog"

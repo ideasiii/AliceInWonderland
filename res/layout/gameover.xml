@@ -2,25 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/success"
-    android:gravity="center"
+    android:background="@drawable/home"
+    android:gravity="bottom|center_horizontal"
     android:orientation="vertical"
-    android:paddingLeft="50dp"
-    android:paddingRight="50dp"
-    android:paddingTop="10dp" >
+    android:padding="30dp" >
 
     <ImageView
         android:id="@+id/imageViewGameoverPic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/content_description"
-        android:scaleType="centerInside"
-        android:src="@drawable/undobox" />
+        android:scaleType="centerInside" />
 
     <Button
         android:id="@+id/buttonGameoverExit"
         android:layout_width="100dp"
         android:layout_height="50dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/style_edit_text"
         android:text="@string/gameover"
         android:textColor="@android:color/holo_blue_dark" />

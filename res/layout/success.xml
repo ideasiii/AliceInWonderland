@@ -2,30 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/success2"
+    android:background="@drawable/success1_1"
     android:gravity="bottom|center_horizontal"
     android:orientation="vertical"
     android:padding="50dp" >
 
-    <TextView
-        android:id="@+id/textViewSuccessTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0.7"
-        android:background="@drawable/style_edit_text"
-        android:padding="4dp"
-        android:text="@string/success"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/holo_red_dark" />
-
     <Button
         android:id="@+id/buttonSuccess"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_marginTop="30dp"
-        android:background="@drawable/style_button"
-        android:padding="10dp"
-        android:text="@string/next"
-        android:textColor="@color/Orange_Deep" />
+        android:background="@drawable/next"
+        android:padding="10dp" />
 
 </LinearLayout>

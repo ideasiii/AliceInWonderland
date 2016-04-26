@@ -38,4 +38,6 @@ public abstract class MSG
 	public static final int	FB_LOGIN				= ID + 32;
 	public static final int	REQUEST_CODE_CAMERA		= ID + 33;
 	public static final int	REQUEST_CODE_SHARE		= ID + 34;
+	public static final int	CALLBACK_BT				= ID + 35;
+
 }

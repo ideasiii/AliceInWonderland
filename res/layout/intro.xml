@@ -2,39 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/home_bg"
-    android:gravity="center_horizontal"
+    android:background="@drawable/intro"
+    android:gravity="bottom|center_horizontal"
     android:orientation="vertical"
-    android:padding="20dp" >
-
-    <TextView
-        android:id="@+id/textViewStoryTitle1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/home_title1"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/holo_red_dark"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/textViewStoryTitle2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/home_title2"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/holo_red_dark" />
+    android:paddingBottom="20dp"
+    android:paddingLeft="40dp"
+    android:paddingRight="40dp" >
 
     <ScrollView
         android:id="@+id/scrollViewStoryContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="220dp"
         android:layout_weight="1"
-        android:background="@drawable/paper2"
-        android:paddingBottom="30dp"
-        android:paddingEnd="8dp"
-        android:paddingStart="10dp"
-        android:paddingTop="35dp"
         android:scrollbars="none" >
 
         <LinearLayout
@@ -48,21 +28,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/story_content"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
         </LinearLayout>
     </ScrollView>
 
     <Button
         android:id="@+id/buttonStoryStart"
-        android:layout_width="wrap_content"
+        android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/style_button"
-        android:drawablePadding="5dp"
-        android:drawableStart="@drawable/btn_pic"
-        android:padding="10dp"
-        android:text="@string/go"
-        android:textColor="@color/Orange_Deep"
-        android:textStyle="bold" />
+        android:background="@drawable/go" />
 
 </LinearLayout>
