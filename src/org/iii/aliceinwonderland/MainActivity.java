@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -76,6 +77,9 @@ public class MainActivity extends Activity
 	private Dialog				dialogLoading					= null;
 	private MediaHandler		media							= null;
 	private static boolean		mbMute							= false;
+	private static Bitmap		bmpPasswordBG					= null;
+	private static Bitmap		bmpSuccessBG					= null;
+	private static Bitmap		bmpFailBG						= null;
 
 	private class InputLayout
 	{
@@ -214,7 +218,7 @@ public class MainActivity extends Activity
 
 	private void showLayout(final int nLayout)
 	{
-		switch(nLayout)
+		switch (nLayout)
 		{
 		case LAYOUT_WELCOME:
 			setContentView(R.layout.welcome);
@@ -449,18 +453,38 @@ public class MainActivity extends Activity
 		this.selfHandler = selfHandler;
 	}
 
+	private void releaseBmp(Bitmap bitmap)
+	{
+		if (null != bitmap)
+		{
+			if (!bitmap.isRecycled())
+				bitmap.recycle();
+			bitmap = null;
+		}
+	}
+
 	private void setInputLayout(final int nSession)
 	{
 		if (null == viewKeyInput)
 			return;
+		releaseBmp(bmpPasswordBG);
+		bmpPasswordBG = BitmapFactory.decodeResource(getResources(), listInputLayout.get(nSession).mnBackground);
 		viewKeyInput.findViewById(R.id.linearLayoutPasswordMain)
-				.setBackgroundResource(listInputLayout.get(nSession).mnBackground);
+				.setBackground(new BitmapDrawable(getResources(), bmpPasswordBG));
+
 		viewKeyInput.findViewById(R.id.editTextKey1).setBackgroundResource(listInputLayout.get(nSession).mnInput);
 		viewKeyInput.findViewById(R.id.editTextKey2).setBackgroundResource(listInputLayout.get(nSession).mnInput);
 		viewKeyInput.findViewById(R.id.editTextKey3).setBackgroundResource(listInputLayout.get(nSession).mnInput);
-		flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).setBackgroundResource(listInputLayout.get(nSession).mnFail);
+
+		releaseBmp(bmpFailBG);
+		bmpFailBG = BitmapFactory.decodeResource(getResources(), listInputLayout.get(nSession).mnFail);
+		flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL)
+				.setBackground(new BitmapDrawable(getResources(), bmpFailBG));
+
+		releaseBmp(bmpSuccessBG);
+		bmpSuccessBG = BitmapFactory.decodeResource(getResources(), listInputLayout.get(nSession).mnSuccess);
 		flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS)
-				.setBackgroundResource(listInputLayout.get(nSession).mnSuccess);
+				.setBackground(new BitmapDrawable(getResources(), bmpSuccessBG));
 	}
 
 	private void initSession1()
@@ -881,7 +905,7 @@ public class MainActivity extends Activity
 		@Override
 		public void handleMessage(Message msg)
 		{
-			switch(msg.what)
+			switch (msg.what)
 			{
 			case MSG_SHOW_HOME:
 				showLayout(LAYOUT_HOME);
@@ -927,7 +951,7 @@ public class MainActivity extends Activity
 
 	private void btCallback(final int nState)
 	{
-		switch(nState)
+		switch (nState)
 		{
 		case BlueToothHandler.BOND_BONDED:
 		case BlueToothHandler.CANCEL_BY_USER:
