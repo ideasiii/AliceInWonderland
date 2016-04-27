@@ -14,6 +14,7 @@ public class BlueToothHandler
 	public final static int			BOND_BONDED			= 1;
 	public final static int			BOND_NONE			= 2;
 	public final static int			CANCEL_BY_USER		= 3;
+	private int						mnTryCount			= 0;
 
 	private final String			BT_NAME				= "HC-05";
 	private static BluetoothHandler	mBluetoothHandler	= null;
@@ -78,7 +79,7 @@ public class BlueToothHandler
 		if (null != mBluetoothHandler)
 		{
 			mBluetoothHandler.stopListenAction();
-			//mBluetoothHandler.setBluetooth(false);
+			// mBluetoothHandler.setBluetooth(false);
 			mBluetoothHandler = null;
 			Logs.showTrace("Release BT");
 		}
@@ -128,7 +129,18 @@ public class BlueToothHandler
 					&& from == ResponseCode.METHOD_OPEN_BLUETOOTH_CONNECTED_LINK)
 			{
 				release();
-				init(theHandler);
+				++mnTryCount;
+				if (300 < mnTryCount)
+				{
+					mnTryCount = 0;
+					mbBTEnable = false;
+					Common.postMessage(theHandler, MSG.CALLBACK_BT, BOND_NONE, 0, null);
+				}
+				else
+				{
+					// start();
+					init(theHandler);
+				}
 			}
 			else
 			{

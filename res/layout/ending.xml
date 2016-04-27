@@ -2,7 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/pass" >
+    android:background="@drawable/pass"
+    android:contentDescription="@string/content_description" >
 
     <LinearLayout
         android:id="@+id/linearLayoutEndingHead"
@@ -47,5 +48,16 @@
         android:textColor="@android:color/white"
         android:textSize="18sp"
         android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/imageViewEndingHome"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="30dp"
+        android:layout_marginStart="40dp"
+        android:contentDescription="@string/content_description"
+        android:src="@drawable/home_icon" />
 
 </RelativeLayout>

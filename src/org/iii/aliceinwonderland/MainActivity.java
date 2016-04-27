@@ -218,7 +218,7 @@ public class MainActivity extends Activity
 
 	private void showLayout(final int nLayout)
 	{
-		switch (nLayout)
+		switch(nLayout)
 		{
 		case LAYOUT_WELCOME:
 			setContentView(R.layout.welcome);
@@ -834,6 +834,16 @@ public class MainActivity extends Activity
 					}
 				});
 
+		pageHandler.getView(ViewPagerHandler.PAGE_ENDING).findViewById(R.id.imageViewEndingHome)
+				.setOnClickListener(new OnClickListener()
+				{
+					@Override
+					public void onClick(View v)
+					{
+						showLayout(LAYOUT_HOME);
+					}
+				});
+
 		flipperHandler.close();
 		pageHandler.showPage(ViewPagerHandler.PAGE_ENDING);
 		selfHandler.sendEmptyMessageDelayed(MSG_SHOW_SHARE_DIALOG, 2000);
@@ -905,7 +915,7 @@ public class MainActivity extends Activity
 		@Override
 		public void handleMessage(Message msg)
 		{
-			switch (msg.what)
+			switch(msg.what)
 			{
 			case MSG_SHOW_HOME:
 				showLayout(LAYOUT_HOME);
@@ -951,7 +961,7 @@ public class MainActivity extends Activity
 
 	private void btCallback(final int nState)
 	{
-		switch (nState)
+		switch(nState)
 		{
 		case BlueToothHandler.BOND_BONDED:
 		case BlueToothHandler.CANCEL_BY_USER:
