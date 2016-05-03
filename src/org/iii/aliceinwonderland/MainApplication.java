@@ -7,7 +7,7 @@ import android.os.Handler;
 public class MainApplication extends Application
 {
 	private BlueToothHandler bluetooth = null;
-
+	
 	public MainApplication()
 	{
 		Global.theApplication = this;
@@ -25,6 +25,7 @@ public class MainApplication extends Application
 	{
 		bluetooth = new BlueToothHandler(context);
 		bluetooth.init(handler);
+		
 	}
 
 	public void btSend(final String strData)
