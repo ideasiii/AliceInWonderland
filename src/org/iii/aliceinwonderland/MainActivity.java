@@ -548,6 +548,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
+							answer_error_count ++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -644,7 +645,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
-
+							answer_error_count ++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -739,6 +740,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
+							answer_error_count ++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -834,7 +836,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
-
+							answer_error_count ++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -899,7 +901,7 @@ public class MainActivity extends Activity
 
 		HashMap<String,String> message = new HashMap<String,String>();
 		message.put("PAGE", "PAGE_ENDING");
-		message.put("TIME", String.valueOf(ltotalTime));
+		message.put("TOTAL TIME", strTime);
 		tracker.send(message);
 		
 		
