@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/home"
+    android:gravity="center"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/textViewBTConfigTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120dp"
+        android:text="@string/bt_select"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/white" />
+
+    <RadioGroup
+        android:id="@+id/rgroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/style_edit_text"
+        android:orientation="vertical"
+        android:padding="20dp" >
+
+        <RadioButton
+            android:id="@+id/radioButtonBT1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/toy01"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textSize="24sp" />
+
+        <RadioButton
+            android:id="@+id/radioButtonBT2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/toy02"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textSize="24sp" />
+
+        <RadioButton
+            android:id="@+id/radioButtonBT3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/toy03"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textSize="24sp" />
+
+        <RadioButton
+            android:id="@+id/radioButtonBT4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/toy04"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textSize="24sp" />
+
+        <RadioButton
+            android:id="@+id/radioButtonBT5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/toy05"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textSize="24sp" />
+    </RadioGroup>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@android:color/transparent" >
+
+        <Button
+            android:id="@+id/buttonBTStart"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/play"
+            android:textColor="@color/Orange_Deep"
+            android:textStyle="bold" />
+
+    </RelativeLayout>
+
+</LinearLayout>

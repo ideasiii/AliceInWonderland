@@ -3,40 +3,56 @@
     android:id="@+id/linearLayoutSession2Main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/session1_2"
+    android:background="@drawable/password1_2"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="20dp" >
 
-    <ScrollView
-        android:id="@+id/scrollViewSession2Content"
+    <TextView
+        android:id="@+id/textViewSession2Title0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/session2_title0"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:id="@+id/textViewSession2Title2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/session2_title2"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/white" />
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="80dp"
-        android:layout_weight="1"
-        android:background="@drawable/story1_2"
-        android:focusable="true"
-        android:paddingBottom="120dp"
-        android:paddingLeft="70dp"
-        android:paddingRight="70dp"
-        android:paddingTop="120dp"
-        android:scrollbars="vertical" >
+        android:layout_marginTop="10dp"
+        android:layout_weight="1" >
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/textViewSession2Content"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp" >
+            android:layout_height="match_parent"
+            android:background="@drawable/story1_2_w"
+            android:paddingBottom="130dp"
+            android:paddingLeft="80dp"
+            android:paddingRight="80dp"
+            android:paddingTop="130dp"
+            android:scrollbars="vertical"
+            android:singleLine="false"
+            android:text="@string/session2_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/textViewSession2Content"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/session2_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="14sp" />
-        </LinearLayout>
-    </ScrollView>
+        <ImageView
+            android:id="@+id/imageViewSession2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/content_description"
+            android:scaleType="fitXY"
+            android:src="@drawable/story1_2" />
+    </RelativeLayout>
 
     <Button
         android:id="@+id/buttonSession2Key"

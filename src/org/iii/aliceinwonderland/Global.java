@@ -9,4 +9,5 @@ public abstract class Global
 	public static Bitmap			fb_picture		= null;
 	public static Handler			mainHandler		= null;
 	public static MainApplication	theApplication	= null;
+	public static String			bt_name			= null;
 }

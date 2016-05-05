@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.method.ScrollingMovementMethod;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.View;
@@ -29,6 +30,7 @@ import android.view.animation.Animation.AnimationListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 public class MainActivity extends Activity
@@ -39,6 +41,7 @@ public class MainActivity extends Activity
 	private final int			LAYOUT_STORY					= 2;
 	private final int			LAYOUT_MAIN						= 3;
 	private final int			LAYOUT_LOGIN					= 4;
+	private final int			LAYOUT_BT						= 5;
 
 	private final int			MSG_SHOW_MAIN					= 10;
 	private final int			MSG_SHOW_HOME					= 20;
@@ -82,24 +85,27 @@ public class MainActivity extends Activity
 	private static Bitmap		bmpSuccessBG					= null;
 	private static Bitmap		bmpFailBG						= null;
 
-	private TrackerHandler tracker = null;
-	private int answer_error_count = 0;
-	
-	
-	
+	private TrackerHandler		tracker							= null;
+	private int					answer_error_count				= 0;
+
 	private class InputLayout
 	{
 		public int	mnBackground	= 0;
 		public int	mnInput			= 0;
 		public int	mnSuccess		= 0;
 		public int	mnFail			= 0;
+		public int	mnSessionNum	= 0;
+		public int	mnSessionTitle	= 0;
 
-		public InputLayout(final int nBackground, final int nInput, final int nSuccess, final int nFail)
+		public InputLayout(final int nBackground, final int nInput, final int nSuccess, final int nFail,
+				final int nSessionNum, final int nSessionTitle)
 		{
 			mnBackground = nBackground;
 			mnInput = nInput;
 			mnSuccess = nSuccess;
 			mnFail = nFail;
+			mnSessionNum = nSessionNum;
+			mnSessionTitle = nSessionTitle;
 		}
 	}
 
@@ -109,10 +115,10 @@ public class MainActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		
+
 		tracker = new TrackerHandler(this);
 		tracker.init();
-		
+
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		this.getActionBar().hide();
 		Global.mainHandler = selfHandler;
@@ -153,7 +159,7 @@ public class MainActivity extends Activity
 	protected void onDestroy()
 	{
 		Logs.showTrace("onDestroy");
-		
+
 		tracker.stopTracker();
 		Global.theApplication.btRelease();
 		media.releasePlayer();
@@ -209,23 +215,19 @@ public class MainActivity extends Activity
 	{
 		listInputLayout = new SparseArray<InputLayout>();
 		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_1, R.drawable.input1_1,
-				R.drawable.success1_1, R.drawable.fail1_1));
+				R.drawable.success1_1, R.drawable.fail1_1, R.string.session1_title0, R.string.session1_title2));
 		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_2, R.drawable.input1_2,
-				R.drawable.success1_2, R.drawable.fail1_2));
+				R.drawable.success1_2, R.drawable.fail1_2, R.string.session2_title0, R.string.session2_title2));
 		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_3, R.drawable.input1_3,
-				R.drawable.success1_3, R.drawable.fail1_3));
+				R.drawable.success1_3, R.drawable.fail1_3, R.string.session3_title0, R.string.session3_title2));
 		listInputLayout.append(listInputLayout.size(), new InputLayout(R.drawable.password1_4, R.drawable.input1_4,
-				R.drawable.success1_4, R.drawable.fail1_4));
+				R.drawable.success1_4, R.drawable.fail1_4, R.string.session4_title0, R.string.session4_title2));
 
 	}
 
 	private void closeBox()
 	{
-		Global.theApplication.btSend("a");
-		Global.theApplication.btSend("c");
-		Global.theApplication.btSend("e");
-		Global.theApplication.btSend("g");
-		Global.theApplication.btSend("i");
+		Global.theApplication.btSend("acegi");
 	}
 
 	private void showLayout(final int nLayout)
@@ -234,28 +236,30 @@ public class MainActivity extends Activity
 		switch(nLayout)
 		{
 		case LAYOUT_WELCOME:
-			trackerMessage.put("PAGE","LAYOUT_WELCOME");
+			trackerMessage.put("PAGE", "LAYOUT_WELCOME");
 			tracker.send(trackerMessage);
 			setContentView(R.layout.welcome);
 			logoShow();
 			break;
 		case LAYOUT_HOME:
-			
-			Logs.showTrace("initBluetooth........");
-			dialogLoading = DialogHandler.showLoading(this);
-			Global.theApplication.initBlueTooth(this, selfHandler);
+			if (null != Global.bt_name)
+			{
+				Logs.showTrace("initBluetooth........");
+				dialogLoading = DialogHandler.showLoading(this);
+				Global.theApplication.initBlueTooth(this, selfHandler);
+			}
 			setContentView(R.layout.home);
 			initHomeStartBtn();
 			break;
 		case LAYOUT_STORY:
-			trackerMessage.put("PAGE","LAYOUT_STORY");
+			trackerMessage.put("PAGE", "LAYOUT_STORY");
 			tracker.send(trackerMessage);
 			setContentView(R.layout.intro);
 			initStoryGoBtn();
 			closeBox();
 			break;
 		case LAYOUT_MAIN:
-			trackerMessage.put("PAGE","LAYOUT_MAIN");
+			trackerMessage.put("PAGE", "LAYOUT_MAIN");
 			tracker.send(trackerMessage);
 			setContentView(R.layout.activity_main);
 			initMainHandler();
@@ -263,12 +267,58 @@ public class MainActivity extends Activity
 		case LAYOUT_LOGIN:
 			showLogin();
 			break;
+		case LAYOUT_BT:
+			showBtSelect();
+			break;
 		}
+	}
+
+	private void showBtSelect()
+	{
+		setContentView(R.layout.btconfig);
+
+		((RadioGroup) findViewById(R.id.rgroup)).setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener()
+		{
+
+			@Override
+			public void onCheckedChanged(RadioGroup group, int checkedId)
+			{
+				switch(checkedId)
+				{
+				case R.id.radioButtonBT1:
+					Global.bt_name = "Toy01";
+					break;
+				case R.id.radioButtonBT2:
+					Global.bt_name = "Toy02";
+					break;
+				case R.id.radioButtonBT3:
+					Global.bt_name = "Toy03";
+					break;
+				case R.id.radioButtonBT4:
+					Global.bt_name = "Toy04";
+					break;
+				case R.id.radioButtonBT5:
+					Global.bt_name = "Toy05";
+					break;
+				}
+
+				Logs.showTrace("BT Name set to: " + Global.bt_name);
+			}
+		});
+
+		findViewById(R.id.buttonBTStart).setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				showLayout(LAYOUT_HOME);
+			}
+		});
 	}
 
 	private void showLogin()
 	{
-	
+
 		setContentView(R.layout.login);
 		findViewById(R.id.textViewLoginFacebook).setOnClickListener(new OnClickListener()
 		{
@@ -287,13 +337,15 @@ public class MainActivity extends Activity
 		});
 		findViewById(R.id.textViewLoginSkip).setOnClickListener(new OnClickListener()
 		{
-			HashMap<String,String> message = new HashMap<String,String>();
+			HashMap<String, String> message = new HashMap<String, String>();
+
 			@Override
 			public void onClick(View v)
 			{
-				message.put("PAGE","LAYOUT_SKIP_LOGIN");
+				message.put("PAGE", "LAYOUT_SKIP_LOGIN");
 				tracker.send(message);
-				showLayout(LAYOUT_HOME);
+				// showLayout(LAYOUT_HOME);
+				showLayout(LAYOUT_BT);
 			}
 		});
 	}
@@ -301,23 +353,24 @@ public class MainActivity extends Activity
 	private void showFacebookLogin()
 	{
 		Logs.showTrace("Facebook Login Start");
-		
+
 		facebook = new FacebookHandler(this);
 		facebook.init();
 		facebook.setOnFacebookLoginResultListener(new FacebookHandler.OnFacebookLoginResult()
 		{
-			
+
 			@Override
 			public void onLoginResult(String strFBID, String strName, String strEmail, String strError)
 			{
-				HashMap<String,String> message = new HashMap<String,String>();
-				message.put("PAGE","LAYOUT_FACEBOOK_LOGIN");
+				HashMap<String, String> message = new HashMap<String, String>();
+				message.put("PAGE", "LAYOUT_FACEBOOK_LOGIN");
 				message.put("FACEBOOK_ID", strFBID);
 				message.put("FACEBOOK_NAME", strName);
 				message.put("FACEBOOK_EMAIL", strEmail);
 				message.put("FACEBOOK_ERROR", strError);
 				tracker.send(message);
-				showLayout(LAYOUT_HOME);
+				// showLayout(LAYOUT_HOME);
+				showLayout(LAYOUT_BT);
 				Logs.showTrace("Login Facebook: " + strFBID + " " + strName + " " + strEmail + " " + strError);
 				Logs.showTrace("Facebook token: " + facebook.getToken());
 			}
@@ -327,7 +380,8 @@ public class MainActivity extends Activity
 
 	private void initHomeStartBtn()
 	{
-		media.play();
+		if (!mbMute)
+			media.play();
 		this.findViewById(R.id.buttonHomeStart).setOnClickListener(new OnClickListener()
 		{
 			@Override
@@ -349,22 +403,22 @@ public class MainActivity extends Activity
 
 	private void switchMute()
 	{
-		HashMap<String,String> message = new HashMap<String,String>();
+		HashMap<String, String> message = new HashMap<String, String>();
 		if (mbMute)
 		{
-			message.put("PAGE","LAYOUT_HOME");
-			message.put("BGM","play");
+			message.put("PAGE", "LAYOUT_HOME");
+			message.put("BGM", "play");
 			tracker.send(message);
-			
+
 			mbMute = false;
 			media.play();
 		}
 		else
 		{
-			message.put("PAGE","LAYOUT_HOME");
-			message.put("BGM","mute");
+			message.put("PAGE", "LAYOUT_HOME");
+			message.put("BGM", "mute");
 			tracker.send(message);
-			
+
 			mbMute = true;
 			media.stop();
 		}
@@ -476,8 +530,11 @@ public class MainActivity extends Activity
 		{
 			pageHandler.showPage(ViewPagerHandler.PAGE_SESSION1);
 			viewSession1 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION1);
-			fadeInAndShowContent(viewSession1.findViewById(R.id.scrollViewSession1Content),
-					MSG_SHOW_CONTENT_SESSION1_END);
+
+			TextView tv = (TextView) viewSession1.findViewById(R.id.textViewSession1Content);
+			tv.setMovementMethod(ScrollingMovementMethod.getInstance());
+			fadeInAndShowContent(tv, MSG_SHOW_CONTENT_SESSION1_END);
+
 			session1_s = System.currentTimeMillis();
 			Logs.showTrace("Game Session1 start:" + String.valueOf(session1_s));
 		}
@@ -517,6 +574,11 @@ public class MainActivity extends Activity
 		viewKeyInput.findViewById(R.id.editTextKey2).setBackgroundResource(listInputLayout.get(nSession).mnInput);
 		viewKeyInput.findViewById(R.id.editTextKey3).setBackgroundResource(listInputLayout.get(nSession).mnInput);
 
+		((TextView) viewKeyInput.findViewById(R.id.textViewKeyInputSession))
+				.setText(listInputLayout.get(nSession).mnSessionNum);
+		((TextView) viewKeyInput.findViewById(R.id.textViewKeyInputTitle))
+				.setText(listInputLayout.get(nSession).mnSessionTitle);
+
 		releaseBmp(bmpFailBG);
 		bmpFailBG = BitmapFactory.decodeResource(getResources(), listInputLayout.get(nSession).mnFail);
 		flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL)
@@ -548,7 +610,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
-							answer_error_count ++;
+							answer_error_count++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -565,19 +627,18 @@ public class MainActivity extends Activity
 							int nKey = Integer.valueOf(strKey);
 							if (693 == nKey)
 							{
-							
+
 								session1_e = System.currentTimeMillis();
 								Global.theApplication.btSend("b");
 								Logs.showTrace("Game Session1 end:" + String.valueOf(session1_e));
-								
-								HashMap<String,String> message = new HashMap<String,String>();
+
+								HashMap<String, String> message = new HashMap<String, String>();
 								message.put("PAGE", "SESSSON 1");
 								message.put("TIME", formatTime(session1_e - session1_s));
 								message.put("INCORRECT ANSWER COUNT", String.valueOf(answer_error_count));
 								tracker.send(message);
 								answer_error_count = 0;
-								
-								
+
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
 										.setOnClickListener(new OnClickListener()
@@ -588,9 +649,12 @@ public class MainActivity extends Activity
 												flipperHandler.close();
 												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION2);
 												viewSession2 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION2);
-												fadeInAndShowContent(
-														viewSession2.findViewById(R.id.scrollViewSession2Content),
-														MSG_SHOW_CONTENT_SESSION2_END);
+
+												TextView tv = (TextView) viewSession2
+														.findViewById(R.id.textViewSession2Content);
+												tv.setMovementMethod(ScrollingMovementMethod.getInstance());
+												fadeInAndShowContent(tv, MSG_SHOW_CONTENT_SESSION2_END);
+
 												session2_s = System.currentTimeMillis();
 												Logs.showTrace("Game Session2 start:" + String.valueOf(session2_s));
 											}
@@ -598,7 +662,7 @@ public class MainActivity extends Activity
 							}
 							else
 							{
-								answer_error_count ++;
+								answer_error_count++;
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 										.setOnClickListener(new OnClickListener()
@@ -645,7 +709,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
-							answer_error_count ++;
+							answer_error_count++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -667,13 +731,13 @@ public class MainActivity extends Activity
 
 								Logs.showTrace("Game Session2 end:" + String.valueOf(session2_e));
 
-								HashMap<String,String> message = new HashMap<String,String>();
+								HashMap<String, String> message = new HashMap<String, String>();
 								message.put("PAGE", "SESSSON 2");
 								message.put("TIME", formatTime(session2_e - session2_s));
 								message.put("INCORRECT ANSWER COUNT", String.valueOf(answer_error_count));
 								tracker.send(message);
 								answer_error_count = 0;
-								
+
 								flipperHandler.showView(FlipperHandler.VIEW_ID_SUCCESS);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_SUCCESS).findViewById(R.id.buttonSuccess)
 										.setOnClickListener(new OnClickListener()
@@ -684,9 +748,12 @@ public class MainActivity extends Activity
 												flipperHandler.close();
 												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION3);
 												viewSession3 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION3);
-												fadeInAndShowContent(
-														viewSession3.findViewById(R.id.scrollViewSession3Content),
-														MSG_SHOW_CONTENT_SESSION3_END);
+
+												TextView tv = (TextView) viewSession3
+														.findViewById(R.id.textViewSession3Content);
+												tv.setMovementMethod(ScrollingMovementMethod.getInstance());
+												fadeInAndShowContent(tv, MSG_SHOW_CONTENT_SESSION3_END);
+
 												session3_s = System.currentTimeMillis();
 												Logs.showTrace("Game Session3 start:" + String.valueOf(session3_s));
 											}
@@ -694,7 +761,7 @@ public class MainActivity extends Activity
 							}
 							else
 							{
-								answer_error_count ++;
+								answer_error_count++;
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 										.setOnClickListener(new OnClickListener()
@@ -740,7 +807,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
-							answer_error_count ++;
+							answer_error_count++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -761,8 +828,8 @@ public class MainActivity extends Activity
 								Global.theApplication.btSend("f");
 
 								Logs.showTrace("Game Session3 end:" + String.valueOf(session3_e));
-								
-								HashMap<String,String> message = new HashMap<String,String>();
+
+								HashMap<String, String> message = new HashMap<String, String>();
 								message.put("PAGE", "SESSSON 3");
 								message.put("TIME", formatTime(session3_e - session3_s));
 								message.put("INCORRECT ANSWER COUNT", String.valueOf(answer_error_count));
@@ -779,9 +846,12 @@ public class MainActivity extends Activity
 												flipperHandler.close();
 												pageHandler.showPage(ViewPagerHandler.PAGE_SESSION4);
 												viewSession4 = pageHandler.getView(ViewPagerHandler.PAGE_SESSION4);
-												fadeInAndShowContent(
-														viewSession4.findViewById(R.id.scrollViewSession4Content),
-														MSG_SHOW_CONTENT_SESSION4_END);
+
+												TextView tv = (TextView) viewSession4
+														.findViewById(R.id.textViewSession4Content);
+												tv.setMovementMethod(ScrollingMovementMethod.getInstance());
+												fadeInAndShowContent(tv, MSG_SHOW_CONTENT_SESSION4_END);
+
 												session4_s = System.currentTimeMillis();
 												Logs.showTrace("Game Session4 start:" + String.valueOf(session4_s));
 											}
@@ -789,7 +859,7 @@ public class MainActivity extends Activity
 							}
 							else
 							{
-								answer_error_count ++;
+								answer_error_count++;
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 										.setOnClickListener(new OnClickListener()
@@ -836,7 +906,7 @@ public class MainActivity extends Activity
 						Logs.showTrace("Input Key:" + strKey);
 						if (null == strKey || 0 >= strKey.length())
 						{
-							answer_error_count ++;
+							answer_error_count++;
 							flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 							flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 									.setOnClickListener(new OnClickListener()
@@ -857,19 +927,19 @@ public class MainActivity extends Activity
 								Global.theApplication.btSend("h");
 
 								Logs.showTrace("Game Session4 end:" + String.valueOf(session4_e));
-								
-								HashMap<String,String> message = new HashMap<String,String>();
+
+								HashMap<String, String> message = new HashMap<String, String>();
 								message.put("PAGE", "SESSSON 4");
-								message.put("PASS TIME", String.valueOf(session4_e - session4_s));
+								message.put("PASS TIME", formatTime(session4_e - session4_s));
 								message.put("INCORRECT ANSWER COUNT", String.valueOf(answer_error_count));
 								tracker.send(message);
 								answer_error_count = 0;
-								
+
 								showEnding();
 							}
 							else
 							{
-								answer_error_count ++;
+								answer_error_count++;
 								flipperHandler.showView(FlipperHandler.VIEW_ID_FAIL);
 								flipperHandler.getView(FlipperHandler.VIEW_ID_FAIL).findViewById(R.id.buttonFail)
 										.setOnClickListener(new OnClickListener()
@@ -899,12 +969,11 @@ public class MainActivity extends Activity
 
 		String strTime = formatTime(ltotalTime);
 
-		HashMap<String,String> message = new HashMap<String,String>();
+		HashMap<String, String> message = new HashMap<String, String>();
 		message.put("PAGE", "PAGE_ENDING");
 		message.put("TOTAL TIME", strTime);
 		tracker.send(message);
-		
-		
+
 		TextView tvTime = (TextView) pageHandler.getView(ViewPagerHandler.PAGE_ENDING)
 				.findViewById(R.id.textViewEndingTime);
 		tvTime.setText(strTime);
@@ -914,7 +983,7 @@ public class MainActivity extends Activity
 					@Override
 					public void onClick(View v)
 					{
-						HashMap<String,String> message = new HashMap<String,String>();
+						HashMap<String, String> message = new HashMap<String, String>();
 						message.put("PAGE", "CAMERA_PAGE");
 						tracker.send(message);
 						showCamera();
@@ -1048,8 +1117,8 @@ public class MainActivity extends Activity
 
 	private void btCallback(final int nState)
 	{
-		HashMap<String,String> message = new HashMap<String,String>();
-		
+		HashMap<String, String> message = new HashMap<String, String>();
+
 		switch(nState)
 		{
 		case BlueToothHandler.BOND_BONDED:
@@ -1062,7 +1131,7 @@ public class MainActivity extends Activity
 			message.put("BLUETOOTH STATE", "ON");
 			message.put("BLUETOOTH LINK", "Success");
 			tracker.send(message);
-			
+
 			break;
 		case BlueToothHandler.CANCEL_BY_USER:
 			if (null != dialogLoading)
@@ -1070,11 +1139,11 @@ public class MainActivity extends Activity
 				dialogLoading.dismiss();
 				dialogLoading = null;
 			}
-			
+
 			message.put("PAGE", "LAYOUT_HOME");
 			message.put("BLUETOOTH STATE", "CANCEL_BY_USER");
 			tracker.send(message);
-			
+
 			break;
 		case BlueToothHandler.BOND_NONE:
 			if (null != dialogLoading)
@@ -1086,7 +1155,7 @@ public class MainActivity extends Activity
 			message.put("BLUETOOTH STATE", "ON");
 			message.put("BLUETOOTH LINK", "Fail");
 			tracker.send(message);
-			
+
 			DialogHandler.showAlert(MainActivity.this, "藍芽通訊失敗\n請重新啟動程式", false);
 			break;
 
@@ -1096,17 +1165,16 @@ public class MainActivity extends Activity
 	private void showGameover()
 	{
 		this.setContentView(R.layout.gameover);
-		
-		HashMap<String,String> message = new HashMap<String,String>();
+
+		HashMap<String, String> message = new HashMap<String, String>();
 		message.put("PAGE", "LAYOUT_GAMEOVER");
 		tracker.send(message);
-		
+
 		this.findViewById(R.id.buttonGameoverExit).setOnClickListener(new OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
-				
 
 				finish();
 				System.exit(0);

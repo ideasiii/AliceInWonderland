@@ -16,7 +16,6 @@ public class BlueToothHandler
 	public final static int			CANCEL_BY_USER		= 3;
 	private int						mnTryCount			= 0;
 
-	private final String			BT_NAME				= "HC-05";
 	private static BluetoothHandler	mBluetoothHandler	= null;
 	private boolean					mbBTEnable			= false;
 	private Handler					theHandler			= null;
@@ -62,7 +61,8 @@ public class BlueToothHandler
 	{
 		if (null != mBluetoothHandler)
 		{
-			mBluetoothHandler.connectDeviceByName(BT_NAME);
+			Logs.showTrace("BT start to connect BT: " + Global.bt_name);
+			mBluetoothHandler.connectDeviceByName(Global.bt_name);
 		}
 	}
 

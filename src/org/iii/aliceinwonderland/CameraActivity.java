@@ -95,7 +95,6 @@ public class CameraActivity extends Activity
 			Camera.Parameters parameters = c.getParameters();
 			parameters.setPreviewSize(1280, 720);
 			parameters.setPictureSize(1280, 720);
-			parameters.setAutoWhiteBalanceLock(true);
 			parameters.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_AUTO);
 			parameters.setPictureFormat(ImageFormat.JPEG);
 			parameters.setPreviewFrameRate(29);
